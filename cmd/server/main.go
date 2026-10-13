@@ -1,0 +1,36 @@
+package main
+
+import (
+	router "core/api/router"
+	config "core/internal/config"
+	database "core/internal/database"
+	logger "core/pkg/log"
+	"net/http"
+	"time"
+
+	"github.com/ory/graceful"
+)
+
+func main() {
+	logger.Start()
+
+	cfg, err := config.Load()
+	logger.Fatal(err, "Failed to load env")
+
+	gormDB := database.Init(&cfg.Database)
+	sqlDB, err := gormDB.DB()
+	logger.Fatal(err, "Failed to get sql db")
+	defer sqlDB.Close()
+
+	server := graceful.WithDefaults(&http.Server{
+		Addr:         cfg.Server.Port,
+		Handler:      router.Config(gormDB, cfg),
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	})
+
+	logger.Info("Starting Motif API on %s", cfg.Server.Port)
+	err = graceful.Graceful(server.ListenAndServe, server.Shutdown)
+	logger.Fatal(err, "Server shutdown error")
+}

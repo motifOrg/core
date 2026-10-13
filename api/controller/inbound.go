@@ -1,0 +1,317 @@
+package controller
+
+import (
+	"net/http"
+	"strings"
+	"time"
+
+	model "core/internal/model"
+	repository "core/internal/repository"
+	csv "core/pkg/csv"
+	logger "core/pkg/log"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
+
+type CreateOpportunityRequest struct {
+	CampaignID    uuid.UUID `json:"campaign_id" binding:"required"`
+	SenderName    string    `json:"sender_name" binding:"max=120"`
+	SenderEmail   string    `json:"sender_email" binding:"required,email,max=200"`
+	Subject       string    `json:"subject" binding:"required,max=300"`
+	Body          string    `json:"body" binding:"max=20000"`
+	CompanyName   string    `json:"company_name" binding:"max=200"`
+	CompanyDomain string    `json:"company_domain" binding:"max=200"`
+}
+
+type UpdateOpportunityRequest struct {
+	Status     *string `json:"status" binding:"omitempty,oneof=new reviewing qualified declined"`
+	Priority   *string `json:"priority" binding:"omitempty,oneof=high medium low"`
+	FitSummary *string `json:"fit_summary" binding:"omitempty,max=4000"`
+}
+
+type ResearchStatus struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
+}
+
+type IntegrationsData struct {
+	Gmail    interface{}    `json:"gmail"`
+	Research ResearchStatus `json:"research"`
+}
+
+// GetOpportunities godoc
+//
+//	@Summary		List inbound opportunities
+//	@Description	Inbound deals for a campaign, new and high priority first, with status counts
+//	@Tags			inbound
+//	@Produce		json
+//	@Param			campaign_id	query		string	true	"Campaign ID"
+//	@Param			q			query		string	false	"Search subject, sender or company"
+//	@Param			status		query		string	false	"new|reviewing|qualified|declined"
+//	@Param			priority	query		string	false	"high|medium|low"
+//	@Success		200			{array}		model.Opportunity
+//	@Failure		400			{object}	ErrorResponse
+//	@Router			/inbound [get]
+func (c *Controller) GetOpportunities(context *gin.Context) {
+	campaignID, _ := uuid.Parse(context.Query("campaign_id"))
+
+	opportunities, err := c.opportunities.List(repository.OpportunityFilter{
+		CampaignID: campaignID,
+		Query:      strings.TrimSpace(context.Query("q")),
+		Status:     context.Query("status"),
+		Priority:   context.Query("priority"),
+	})
+	if err != nil {
+		logger.Error(
+			"Failed to list inbound: %v",
+			err,
+		)
+
+		context.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	counts, err := c.opportunities.Counts(campaignID)
+	if err != nil {
+		logger.Error(
+			"Failed to count inbound: %v",
+			err,
+		)
+
+		context.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	context.JSON(
+		http.StatusOK,
+		gin.H{
+			"data":   opportunities,
+			"counts": counts,
+		},
+	)
+}
+
+// GetOpportunity godoc
+//
+//	@Summary		Get inbound opportunity
+//	@Tags			inbound
+//	@Produce		json
+//	@Param			id	path		string	true	"Opportunity ID"
+//	@Success		200	{object}	model.Opportunity
+//	@Failure		404	{object}	ErrorResponse
+//	@Router			/inbound/{id} [get]
+func (c *Controller) GetOpportunity(context *gin.Context) {
+	id, _ := uuid.Parse(context.Param("id"))
+
+	opportunity, err := c.opportunities.Get(id)
+	if err != nil {
+		context.JSON(
+			http.StatusNotFound,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	context.JSON(
+		http.StatusOK,
+		gin.H{"data": opportunity},
+	)
+}
+
+// CreateOpportunity godoc
+//
+//	@Summary		Log inbound opportunity
+//	@Description	Manually records an inbound deal email until Gmail sync is available
+//	@Tags			inbound
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		CreateOpportunityRequest	true	"Opportunity"
+//	@Success		201		{object}	model.Opportunity
+//	@Failure		400		{object}	ErrorResponse
+//	@Router			/inbound [post]
+func (c *Controller) CreateOpportunity(context *gin.Context) {
+	var request CreateOpportunityRequest
+	if err := context.ShouldBindJSON(&request);
+		err != nil {
+		context.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	opportunity := model.Opportunity{
+		CampaignID:    request.CampaignID,
+		Source:        model.SourceManual,
+		SenderName:    strings.TrimSpace(request.SenderName),
+		SenderEmail:   strings.TrimSpace(request.SenderEmail),
+		Subject:       strings.TrimSpace(request.Subject),
+		Body:          strings.TrimSpace(request.Body),
+		CompanyName:   strings.TrimSpace(request.CompanyName),
+		CompanyDomain: csv.NormalizeDomain(request.CompanyDomain),
+		ReceivedAt:    time.Now(),
+		Priority:      model.PriorityMedium,
+		Status:        model.OpportunityNew,
+	}
+	if err := c.opportunities.Create(&opportunity);
+		err != nil {
+		logger.Error(
+			"Failed to create opportunity: %v",
+			err,
+		)
+
+		context.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	context.JSON(
+		http.StatusCreated,
+		gin.H{"data": opportunity},
+	)
+}
+
+// UpdateOpportunity godoc
+//
+//	@Summary		Update inbound opportunity
+//	@Description	Changes evaluation status, priority or the ICP fit note
+//	@Tags			inbound
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string						true	"Opportunity ID"
+//	@Param			body	body		UpdateOpportunityRequest	true	"Fields"
+//	@Success		200		{object}	model.Opportunity
+//	@Failure		400		{object}	ErrorResponse
+//	@Failure		404		{object}	ErrorResponse
+//	@Router			/inbound/{id} [patch]
+func (c *Controller) UpdateOpportunity(context *gin.Context) {
+	id, _ := uuid.Parse(context.Param("id"))
+
+	var request UpdateOpportunityRequest
+	if err := context.ShouldBindJSON(&request);
+		err != nil {
+		context.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	fields := map[string]interface{}{}
+	if request.Status != nil {
+		fields["status"] = *request.Status
+	}
+	if request.Priority != nil {
+		fields["priority"] = *request.Priority
+	}
+	if request.FitSummary != nil {
+		fields["fit_summary"] = strings.TrimSpace(*request.FitSummary)
+	}
+	if len(fields) == 0 {
+		context.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "nothing to update"},
+		)
+		return
+	}
+
+	if err := c.opportunities.Update(id, fields);
+		err != nil {
+		logger.Error(
+			"Failed to update opportunity: %v",
+			err,
+		)
+
+		context.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	opportunity, err := c.opportunities.Get(id)
+	if err != nil {
+		logger.Error(
+			"Failed to load opportunity: %v",
+			err,
+		)
+
+		context.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	context.JSON(
+		http.StatusOK,
+		gin.H{"data": opportunity},
+	)
+}
+
+// GetIntegrations godoc
+//
+//	@Summary		Integration status
+//	@Description	Reports whether Gmail and the research provider are available
+//	@Tags			integrations
+//	@Produce		json
+//	@Success		200	{object}	IntegrationsData
+//	@Router			/integrations [get]
+func (c *Controller) GetIntegrations(context *gin.Context) {
+	research := ResearchStatus{
+		Status:  "not_implemented",
+		Message: "No research provider is connected. Findings can be added manually.",
+	}
+	if c.researcher.Enabled() {
+		research = ResearchStatus{Status: "ready", Message: "Research provider connected."}
+	}
+
+	context.JSON(
+		http.StatusOK,
+		gin.H{"data": IntegrationsData{
+			Gmail:    c.gmail.Status(),
+			Research: research,
+		}},
+	)
+}
+
+// SyncGmail godoc
+//
+//	@Summary		Sync Gmail
+//	@Description	Pulls new inbound emails. Returns 503 until Gmail OAuth is implemented and connected.
+//	@Tags			integrations
+//	@Produce		json
+//	@Success		200	{object}	map[string]interface{}
+//	@Failure		503	{object}	ErrorResponse
+//	@Router			/integrations/gmail/sync [post]
+func (c *Controller) SyncGmail(context *gin.Context) {
+	if !c.gmail.Enabled() {
+		context.JSON(
+			http.StatusServiceUnavailable,
+			gin.H{"error": c.gmail.Status().Message},
+		)
+		return
+	}
+
+	context.JSON(
+		http.StatusNotImplemented,
+		gin.H{"error": "gmail sync is not implemented"},
+	)
+}

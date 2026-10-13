@@ -1,0 +1,5 @@
+.env
+bin
+bin/main
+uploads
+build-errors.log
