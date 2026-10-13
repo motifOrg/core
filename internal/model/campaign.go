@@ -27,7 +27,7 @@ type Campaign struct {
 	Status      string `gorm:"default:draft" json:"status"`
 	Workflow    string `gorm:"default:outbound" json:"workflow"`
 
-	ICP *ICP `gorm:"foreignKey:CampaignID" json:"icp,omitempty"`
+	ICP *ICPCriteria `gorm:"foreignKey:CampaignID" json:"icp,omitempty"`
 
 	CompanyCount     int64 `gorm:"->;-:migration" json:"company_count"`
 	OpportunityCount int64 `gorm:"->;-:migration" json:"opportunity_count"`
@@ -35,8 +35,4 @@ type Campaign struct {
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-}
-
-func (Campaign) TableName() string {
-	return "campaigns"
 }

@@ -26,7 +26,7 @@ const (
 	SenderSystem = "system"
 )
 
-type Finding struct {
+type ResearchFinding struct {
 	ID        uuid.UUID `gorm:"<-:create;type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	CompanyID uuid.UUID `gorm:"type:uuid" json:"company_id"`
 
@@ -40,11 +40,7 @@ type Finding struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-func (Finding) TableName() string {
-	return "research_findings"
-}
-
-type Message struct {
+type ResearchMessage struct {
 	ID        uuid.UUID `gorm:"<-:create;type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	CompanyID uuid.UUID `gorm:"type:uuid" json:"company_id"`
 
@@ -52,8 +48,4 @@ type Message struct {
 	SenderRole string `json:"sender_role"`
 
 	CreatedAt time.Time `json:"created_at"`
-}
-
-func (Message) TableName() string {
-	return "research_messages"
 }

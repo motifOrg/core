@@ -57,14 +57,14 @@ func (r *CampaignRepository) Get(id uuid.UUID) (*model.Campaign, error) {
 	return &campaign, nil
 }
 
-func (r *CampaignRepository) Create(campaign *model.Campaign, icp *model.ICP) error {
+func (r *CampaignRepository) Create(campaign *model.Campaign, icp *model.ICPCriteria) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Omit("ICP").Create(campaign).Error;
 			err != nil {
 			return err
 		}
 		if icp == nil {
-			icp = &model.ICP{}
+			icp = &model.ICPCriteria{}
 		}
 		icp.CampaignID = campaign.ID
 		if err := tx.Create(icp).Error;
@@ -101,8 +101,8 @@ func (r *CampaignRepository) Delete(id uuid.UUID) error {
 	return nil
 }
 
-func (r *CampaignRepository) GetICP(campaignID uuid.UUID) (*model.ICP, error) {
-	var icp model.ICP
+func (r *CampaignRepository) GetICP(campaignID uuid.UUID) (*model.ICPCriteria, error) {
+	var icp model.ICPCriteria
 	err := r.db.
 		Where("campaign_id = ?", campaignID).
 		First(&icp).Error
@@ -112,7 +112,7 @@ func (r *CampaignRepository) GetICP(campaignID uuid.UUID) (*model.ICP, error) {
 	return &icp, nil
 }
 
-func (r *CampaignRepository) SaveICP(icp *model.ICP) error {
+func (r *CampaignRepository) SaveICP(icp *model.ICPCriteria) error {
 	existing, err := r.GetICP(icp.CampaignID)
 	if err == gorm.ErrRecordNotFound {
 		return r.db.Create(icp).Error

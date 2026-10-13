@@ -160,9 +160,9 @@ func (c *Controller) CreateCampaign(context *gin.Context) {
 		campaign.Status = model.CampaignStatusDraft
 	}
 
-	var icp *model.ICP
+	var icp *model.ICPCriteria
 	if request.ICP != nil {
-		icp = &model.ICP{
+		icp = &model.ICPCriteria{
 			CampaignID:      campaign.ID,
 			Thesis:          strings.TrimSpace(request.ICP.Thesis),
 			Industries:      request.ICP.Industries,
@@ -377,7 +377,7 @@ func (c *Controller) GetCampaignStats(context *gin.Context) {
 //	@Tags			campaigns
 //	@Produce		json
 //	@Param			id	path		string	true	"Campaign ID"
-//	@Success		200	{object}	model.ICP
+//	@Success		200	{object}	model.ICPCriteria
 //	@Failure		404	{object}	ErrorResponse
 //	@Router			/campaigns/{id}/icp [get]
 func (c *Controller) GetICP(context *gin.Context) {
@@ -413,7 +413,7 @@ func (c *Controller) GetICP(context *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string		true	"Campaign ID"
 //	@Param			body	body		ICPRequest	true	"Criteria"
-//	@Success		200		{object}	model.ICP
+//	@Success		200		{object}	model.ICPCriteria
 //	@Failure		400		{object}	ErrorResponse
 //	@Router			/campaigns/{id}/icp [put]
 func (c *Controller) UpdateICP(context *gin.Context) {
@@ -429,7 +429,7 @@ func (c *Controller) UpdateICP(context *gin.Context) {
 
 		return
 	}
-	icp := &model.ICP{
+	icp := &model.ICPCriteria{
 		CampaignID:      id,
 		Thesis:          strings.TrimSpace(request.Thesis),
 		Industries:      request.Industries,

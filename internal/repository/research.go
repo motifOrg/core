@@ -15,12 +15,12 @@ func NewResearch(db *gorm.DB) *ResearchRepository {
 	return &ResearchRepository{db: db}
 }
 
-func (r *ResearchRepository) CreateFinding(finding *model.Finding) error {
+func (r *ResearchRepository) CreateFinding(finding *model.ResearchFinding) error {
 	return r.db.Create(finding).Error
 }
 
 func (r *ResearchRepository) DeleteFinding(companyID uuid.UUID, id uuid.UUID) error {
-	result := r.db.Delete(&model.Finding{}, "id = ? AND company_id = ?", id, companyID)
+	result := r.db.Delete(&model.ResearchFinding{}, "id = ? AND company_id = ?", id, companyID)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -30,8 +30,8 @@ func (r *ResearchRepository) DeleteFinding(companyID uuid.UUID, id uuid.UUID) er
 	return nil
 }
 
-func (r *ResearchRepository) Messages(companyID uuid.UUID) ([]model.Message, error) {
-	var messages []model.Message
+func (r *ResearchRepository) Messages(companyID uuid.UUID) ([]model.ResearchMessage, error) {
+	var messages []model.ResearchMessage
 	err := r.db.
 		Where("company_id = ?", companyID).
 		Order("created_at ASC").
@@ -39,6 +39,6 @@ func (r *ResearchRepository) Messages(companyID uuid.UUID) ([]model.Message, err
 	return messages, err
 }
 
-func (r *ResearchRepository) CreateMessage(message *model.Message) error {
+func (r *ResearchRepository) CreateMessage(message *model.ResearchMessage) error {
 	return r.db.Create(message).Error
 }

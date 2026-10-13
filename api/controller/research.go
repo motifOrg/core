@@ -34,7 +34,7 @@ type CreateMessageRequest struct {
 //	@Produce		json
 //	@Param			id		path		string					true	"Company ID"
 //	@Param			body	body		CreateFindingRequest	true	"Finding"
-//	@Success		201		{object}	model.Finding
+//	@Success		201		{object}	model.ResearchFinding
 //	@Failure		400		{object}	ErrorResponse
 //	@Router			/companies/{id}/findings [post]
 func (c *Controller) CreateFinding(context *gin.Context) {
@@ -51,7 +51,7 @@ func (c *Controller) CreateFinding(context *gin.Context) {
 		return
 	}
 
-	finding := model.Finding{
+	finding := model.ResearchFinding{
 		CompanyID:      id,
 		Kind:           request.Kind,
 		Title:          strings.TrimSpace(request.Title),
@@ -130,7 +130,7 @@ func (c *Controller) DeleteFinding(context *gin.Context) {
 //	@Tags			research
 //	@Produce		json
 //	@Param			id	path		string	true	"Company ID"
-//	@Success		200	{array}		model.Finding
+//	@Success		200	{array}		model.ResearchFinding
 //	@Failure		503	{object}	ErrorResponse
 //	@Router			/companies/{id}/research [post]
 func (c *Controller) RunResearch(context *gin.Context) {
@@ -206,7 +206,7 @@ func (c *Controller) RunResearch(context *gin.Context) {
 //	@Tags			research
 //	@Produce		json
 //	@Param			id	path		string	true	"Company ID"
-//	@Success		200	{array}		model.Message
+//	@Success		200	{array}		model.ResearchMessage
 //	@Router			/companies/{id}/messages [get]
 func (c *Controller) GetMessages(context *gin.Context) {
 	id, _ := uuid.Parse(context.Param("id"))
@@ -241,7 +241,7 @@ func (c *Controller) GetMessages(context *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string					true	"Company ID"
 //	@Param			body	body		CreateMessageRequest	true	"Question"
-//	@Success		201		{array}		model.Message
+//	@Success		201		{array}		model.ResearchMessage
 //	@Failure		400		{object}	ErrorResponse
 //	@Router			/companies/{id}/messages [post]
 func (c *Controller) CreateMessage(context *gin.Context) {
@@ -297,7 +297,7 @@ func (c *Controller) CreateMessage(context *gin.Context) {
 		return
 	}
 
-	question := model.Message{
+	question := model.ResearchMessage{
 		CompanyID:  id,
 		Body:       body,
 		SenderRole: model.SenderUser,
@@ -317,7 +317,7 @@ func (c *Controller) CreateMessage(context *gin.Context) {
 		return
 	}
 
-	created := []model.Message{question}
+	created := []model.ResearchMessage{question}
 	if c.researcher.Enabled() {
 		reply, err := c.researcher.Ask(context.Request.Context(), *company, history, body)
 		if err != nil {
@@ -333,7 +333,7 @@ func (c *Controller) CreateMessage(context *gin.Context) {
 
 			return
 		}
-		answer := model.Message{
+		answer := model.ResearchMessage{
 			CompanyID:  id,
 			Body:       reply,
 			SenderRole: model.SenderAI,

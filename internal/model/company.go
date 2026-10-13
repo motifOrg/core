@@ -57,12 +57,8 @@ type Company struct {
 	ResearchStatus   string `gorm:"default:not_started" json:"research_status"`
 	EvaluationStatus string `gorm:"default:new" json:"evaluation_status"`
 
-	Findings []Finding `gorm:"foreignKey:CompanyID" json:"findings,omitempty"`
+	Findings []ResearchFinding `gorm:"foreignKey:CompanyID" json:"findings,omitempty"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-}
-
-func (Company) TableName() string {
-	return "companies"
 }

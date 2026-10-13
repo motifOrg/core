@@ -50,7 +50,7 @@ type IntegrationsData struct {
 //	@Param			q			query		string	false	"Search subject, sender or company"
 //	@Param			status		query		string	false	"new|reviewing|qualified|declined"
 //	@Param			priority	query		string	false	"high|medium|low"
-//	@Success		200			{array}		model.Opportunity
+//	@Success		200			{array}		model.InboundOpportunity
 //	@Failure		400			{object}	ErrorResponse
 //	@Router			/inbound [get]
 func (c *Controller) GetOpportunities(context *gin.Context) {
@@ -106,7 +106,7 @@ func (c *Controller) GetOpportunities(context *gin.Context) {
 //	@Tags			inbound
 //	@Produce		json
 //	@Param			id	path		string	true	"Opportunity ID"
-//	@Success		200	{object}	model.Opportunity
+//	@Success		200	{object}	model.InboundOpportunity
 //	@Failure		404	{object}	ErrorResponse
 //	@Router			/inbound/{id} [get]
 func (c *Controller) GetOpportunity(context *gin.Context) {
@@ -136,7 +136,7 @@ func (c *Controller) GetOpportunity(context *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			body	body		CreateOpportunityRequest	true	"Opportunity"
-//	@Success		201		{object}	model.Opportunity
+//	@Success		201		{object}	model.InboundOpportunity
 //	@Failure		400		{object}	ErrorResponse
 //	@Router			/inbound [post]
 func (c *Controller) CreateOpportunity(context *gin.Context) {
@@ -151,7 +151,7 @@ func (c *Controller) CreateOpportunity(context *gin.Context) {
 		return
 	}
 
-	opportunity := model.Opportunity{
+	opportunity := model.InboundOpportunity{
 		CampaignID:    request.CampaignID,
 		Source:        model.SourceManual,
 		SenderName:    strings.TrimSpace(request.SenderName),
@@ -194,7 +194,7 @@ func (c *Controller) CreateOpportunity(context *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string						true	"Opportunity ID"
 //	@Param			body	body		UpdateOpportunityRequest	true	"Fields"
-//	@Success		200		{object}	model.Opportunity
+//	@Success		200		{object}	model.InboundOpportunity
 //	@Failure		400		{object}	ErrorResponse
 //	@Failure		404		{object}	ErrorResponse
 //	@Router			/inbound/{id} [patch]

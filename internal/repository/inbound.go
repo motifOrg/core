@@ -30,9 +30,9 @@ type OpportunityCounts struct {
 	Declined  int64 `json:"declined"`
 }
 
-func (r *OpportunityRepository) List(filter OpportunityFilter) ([]model.Opportunity, error) {
+func (r *OpportunityRepository) List(filter OpportunityFilter) ([]model.InboundOpportunity, error) {
 	query := r.db.
-		Model(&model.Opportunity{}).
+		Model(&model.InboundOpportunity{}).
 		Where("campaign_id = ?", filter.CampaignID)
 
 	if filter.Query != "" {
@@ -49,7 +49,7 @@ func (r *OpportunityRepository) List(filter OpportunityFilter) ([]model.Opportun
 		query = query.Where("priority = ?", filter.Priority)
 	}
 
-	var opportunities []model.Opportunity
+	var opportunities []model.InboundOpportunity
 	err := query.
 		Order("CASE status WHEN 'new' THEN 0 WHEN 'reviewing' THEN 1 ELSE 2 END").
 		Order("CASE priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END").
@@ -74,8 +74,8 @@ func (r *OpportunityRepository) Counts(campaignID uuid.UUID) (OpportunityCounts,
 	return counts, err
 }
 
-func (r *OpportunityRepository) Get(id uuid.UUID) (*model.Opportunity, error) {
-	var opportunity model.Opportunity
+func (r *OpportunityRepository) Get(id uuid.UUID) (*model.InboundOpportunity, error) {
+	var opportunity model.InboundOpportunity
 	if err := r.db.First(&opportunity, "id = ?", id).Error;
 		err != nil {
 		return nil, err
@@ -83,13 +83,13 @@ func (r *OpportunityRepository) Get(id uuid.UUID) (*model.Opportunity, error) {
 	return &opportunity, nil
 }
 
-func (r *OpportunityRepository) Create(opportunity *model.Opportunity) error {
+func (r *OpportunityRepository) Create(opportunity *model.InboundOpportunity) error {
 	return r.db.Create(opportunity).Error
 }
 
 func (r *OpportunityRepository) Update(id uuid.UUID, fields map[string]interface{}) error {
 	result := r.db.
-		Model(&model.Opportunity{}).
+		Model(&model.InboundOpportunity{}).
 		Where("id = ?", id).
 		Updates(fields)
 	if result.Error != nil {

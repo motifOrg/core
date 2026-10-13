@@ -35,7 +35,7 @@ type UpdateDraftRequest struct {
 //	@Produce		json
 //	@Param			company_id		query		string	false	"Company ID"
 //	@Param			opportunity_id	query		string	false	"Opportunity ID"
-//	@Success		200				{array}		model.Draft
+//	@Success		200				{array}		model.MessageDraft
 //	@Router			/drafts [get]
 func (c *Controller) GetDrafts(context *gin.Context) {
 	companyID, _ := uuid.Parse(context.Query("company_id"))
@@ -70,7 +70,7 @@ func (c *Controller) GetDrafts(context *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			body	body		CreateDraftRequest	true	"Draft"
-//	@Success		201		{object}	model.Draft
+//	@Success		201		{object}	model.MessageDraft
 //	@Failure		400		{object}	ErrorResponse
 //	@Router			/drafts [post]
 func (c *Controller) CreateDraft(context *gin.Context) {
@@ -92,7 +92,7 @@ func (c *Controller) CreateDraft(context *gin.Context) {
 		return
 	}
 
-	draft := model.Draft{
+	draft := model.MessageDraft{
 		CompanyID:     request.CompanyID,
 		OpportunityID: request.OpportunityID,
 		Recipient:     strings.TrimSpace(request.Recipient),
@@ -180,7 +180,7 @@ func (c *Controller) CreateDraft(context *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string				true	"Draft ID"
 //	@Param			body	body		UpdateDraftRequest	true	"Fields"
-//	@Success		200		{object}	model.Draft
+//	@Success		200		{object}	model.MessageDraft
 //	@Failure		400		{object}	ErrorResponse
 //	@Failure		404		{object}	ErrorResponse
 //	@Router			/drafts/{id} [patch]

@@ -25,7 +25,3 @@ type Document struct {
 
 	CreatedAt time.Time `json:"created_at"`
 }
-
-func (Document) TableName() string {
-	return "documents"
-}

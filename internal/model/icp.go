@@ -7,7 +7,7 @@ import (
 	"github.com/lib/pq"
 )
 
-type ICP struct {
+type ICPCriteria struct {
 	ID         uuid.UUID `gorm:"<-:create;type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	CampaignID uuid.UUID `gorm:"type:uuid" json:"campaign_id"`
 
@@ -27,8 +27,4 @@ type ICP struct {
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-}
-
-func (ICP) TableName() string {
-	return "icp_criteria"
 }

@@ -13,7 +13,7 @@ const (
 	OpportunityDeclined  = "declined"
 )
 
-type Opportunity struct {
+type InboundOpportunity struct {
 	ID         uuid.UUID  `gorm:"<-:create;type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	CampaignID uuid.UUID  `gorm:"type:uuid" json:"campaign_id"`
 	CompanyID  *uuid.UUID `gorm:"type:uuid" json:"company_id"`
@@ -37,8 +37,4 @@ type Opportunity struct {
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-}
-
-func (Opportunity) TableName() string {
-	return "inbound_opportunities"
 }
