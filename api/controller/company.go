@@ -294,11 +294,16 @@ func (c *Controller) ImportCompanies(context *gin.Context) {
 		return
 	}
 
+	if c.researcher.Enabled() {
+		icp, _ := c.campaigns.GetICP(id)
+		go c.researcher.Enrich(inserted, icp)
+	}
+
 	context.JSON(
 		http.StatusOK,
 		gin.H{"data": ImportData{
 			RowsProcessed: len(parsed.Companies) + len(parsed.Errors),
-			Inserted:      inserted,
+			Inserted:      len(inserted),
 			Skipped:       skipped,
 			Failed:        len(parsed.Errors),
 			Errors:        parsed.Errors,
@@ -333,7 +338,7 @@ func (c *Controller) UpdateCompany(context *gin.Context) {
 		return
 	}
 
-	fields := map[string]interface{}{}
+	fields := map[string]any{}
 	if request.Name != nil {
 		fields["name"] = strings.TrimSpace(*request.Name)
 	}
@@ -426,7 +431,7 @@ func (c *Controller) UpdateCompany(context *gin.Context) {
 //	@Tags			companies
 //	@Produce		json
 //	@Param			id	path		string	true	"Company ID"
-//	@Success		200	{object}	map[string]interface{}
+//	@Success		200	{object}	map[string]any
 //	@Failure		404	{object}	ErrorResponse
 //	@Router			/companies/{id} [delete]
 func (c *Controller) DeleteCompany(context *gin.Context) {

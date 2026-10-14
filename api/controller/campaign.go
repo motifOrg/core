@@ -32,6 +32,7 @@ type CreateCampaignRequest struct {
 	Description string      `json:"description" binding:"max=2000"`
 	Workflow    string      `json:"workflow" binding:"omitempty,oneof=outbound inbound both"`
 	Status      string      `json:"status" binding:"omitempty,oneof=draft active"`
+	GmailLabel  string      `json:"gmail_label" binding:"max=120"`
 	ICP         *ICPRequest `json:"icp"`
 }
 
@@ -40,6 +41,7 @@ type UpdateCampaignRequest struct {
 	Description *string `json:"description" binding:"omitempty,max=2000"`
 	Workflow    *string `json:"workflow" binding:"omitempty,oneof=outbound inbound both"`
 	Status      *string `json:"status" binding:"omitempty,oneof=draft active paused archived"`
+	GmailLabel  *string `json:"gmail_label" binding:"omitempty,max=120"`
 }
 
 type CampaignStatsResponse struct {
@@ -53,7 +55,7 @@ type ErrorResponse struct {
 // GetCampaigns godoc
 //
 //	@Summary		List campaigns
-//	@Description	Lists non-archived campaigns with company, inbound and document counts
+//	@Description	Lists non-archived campaigns with company and inbound counts
 //	@Tags			campaigns
 //	@Produce		json
 //	@Param			q		query		string	false	"Search by name"
@@ -152,6 +154,7 @@ func (c *Controller) CreateCampaign(context *gin.Context) {
 		Description: strings.TrimSpace(request.Description),
 		Workflow:    request.Workflow,
 		Status:      request.Status,
+		GmailLabel:  strings.TrimSpace(request.GmailLabel),
 	}
 	if campaign.Workflow == "" {
 		campaign.Workflow = model.WorkflowOutbound
@@ -227,7 +230,7 @@ func (c *Controller) UpdateCampaign(context *gin.Context) {
 		return
 	}
 
-	fields := map[string]interface{}{}
+	fields := map[string]any{}
 	if request.Name != nil {
 		fields["name"] = strings.TrimSpace(*request.Name)
 	}
@@ -239,6 +242,9 @@ func (c *Controller) UpdateCampaign(context *gin.Context) {
 	}
 	if request.Status != nil {
 		fields["status"] = *request.Status
+	}
+	if request.GmailLabel != nil {
+		fields["gmail_label"] = strings.TrimSpace(*request.GmailLabel)
 	}
 	if len(fields) == 0 {
 		context.JSON(
@@ -287,30 +293,15 @@ func (c *Controller) UpdateCampaign(context *gin.Context) {
 // DeleteCampaign godoc
 //
 //	@Summary		Delete campaign
-//	@Description	Deletes a campaign with its ICP, documents, companies, inbound opportunities and drafts
+//	@Description	Deletes a campaign with its ICP, companies, inbound opportunities and drafts
 //	@Tags			campaigns
 //	@Produce		json
 //	@Param			id	path		string	true	"Campaign ID"
-//	@Success		200	{object}	map[string]interface{}
+//	@Success		200	{object}	map[string]any
 //	@Failure		404	{object}	ErrorResponse
 //	@Router			/campaigns/{id} [delete]
 func (c *Controller) DeleteCampaign(context *gin.Context) {
 	id, _ := uuid.Parse(context.Param("id"))
-
-	documents, err := c.documents.List(id)
-	if err != nil {
-		logger.Error(
-			"Failed to load documents: %v",
-			err,
-		)
-
-		context.JSON(
-			http.StatusInternalServerError,
-			gin.H{"error": err.Error()},
-		)
-
-		return
-	}
 
 	if err := c.campaigns.Delete(id);
 		err != nil {
@@ -325,10 +316,6 @@ func (c *Controller) DeleteCampaign(context *gin.Context) {
 		)
 
 		return
-	}
-
-	for _, document := range documents {
-		_ = c.storage.Delete(document.StorageKey)
 	}
 
 	context.JSON(
@@ -458,7 +445,7 @@ func (c *Controller) UpdateICP(context *gin.Context) {
 
 		return
 	}
-	_ = c.campaigns.Update(id, map[string]interface{}{"updated_at": icp.UpdatedAt})
+	_ = c.campaigns.Update(id, map[string]any{"updated_at": icp.UpdatedAt})
 
 	context.JSON(
 		http.StatusOK,

@@ -41,9 +41,11 @@ internal/database/     ensure, connect, migrate
 internal/migrations/   SQL migrations
 internal/model/        GORM models and enums
 internal/repository/   queries
-internal/service/      storage, research and Gmail seams
+internal/service/      research and Gmail
 pkg/csv/               company CSV parser
+pkg/gmail/             Gmail API client (env refresh token)
 pkg/log/               logger
+pkg/openai/            OpenAI client, enrichment agent and research tools
 script/                bootstrap, migrate, seed, swagger
 ```
 
@@ -55,13 +57,11 @@ Base path `/api/v1`. Responses are `{"data": ...}` (lists add `total`, `page`, `
 |--------|------|-|
 | GET | `/health` | |
 | GET | `/integrations` | Gmail and research status, including missing env vars |
-| POST | `/integrations/gmail/sync` | 503 until Gmail is built |
+| POST | `/integrations/gmail/sync?campaign_id=` | Pulls messages from the campaign `gmail_label` (last 7 days; `INBOX` when empty) |
 | GET, POST | `/campaigns` | `?status=` (`all` includes archived) `?q=` |
 | GET, PATCH, DELETE | `/campaigns/:id` | |
 | GET | `/campaigns/:id/stats` | |
 | GET, PUT | `/campaigns/:id/icp` | |
-| GET, POST | `/campaigns/:id/documents` | Multipart upload, PDF/PPT/PPTX/Key, `MAX_UPLOAD_MB` |
-| DELETE | `/documents/:id` | |
 | POST | `/campaigns/:id/companies/import` | CSV; returns inserted / skipped / failed with row errors |
 | GET, POST | `/companies` | `?campaign_id=` `?q=` `?sort=` `?priority=` `?research_status=` `?evaluation_status=` `?page=` |
 | GET, PATCH, DELETE | `/companies/:id` | |
@@ -78,6 +78,13 @@ Base path `/api/v1`. Responses are `{"data": ...}` (lists add `total`, `page`, `
 Both live in `internal/service` and are nil today, so the API reports them as not configured instead of faking results.
 
 - `ResearchProvider`: `Research(company, icp)` returns findings, `Ask(company, history, question)` returns a reply. This is where web search, LLM orchestration or MCP tools would go.
-- `MailProvider`: `ListInbound(since)` returns Gmail messages. OAuth tokens must be stored encrypted with `TOKEN_ENCRYPTION_KEY` (32 bytes), never as plain rows.
+- Gmail: set `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` in `.env`. Set `gmail_label` per campaign in the app; when empty, sync uses `INBOX`.
+
+```env
+GMAIL_CLIENT_ID=
+GMAIL_CLIENT_SECRET=
+GMAIL_REFRESH_TOKEN=
+GMAIL_REDIRECT_URL=http://localhost
+```
 
 There is no send path anywhere in the API.

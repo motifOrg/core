@@ -5,16 +5,11 @@ type ServerConfig struct {
 	AppOrigin string
 }
 
-type StorageConfig struct {
-	UploadDir   string
-	MaxUploadMB int
-}
-
 type GmailConfig struct {
 	ClientID     string
 	ClientSecret string
 	RedirectURL  string
-	TokenKey     string
+	RefreshToken string
 }
 
 type DatabaseConfig struct {
@@ -26,9 +21,13 @@ type DatabaseConfig struct {
 	Username string
 }
 
+type OpenAIConfig struct {
+	SecretKey string
+}
+
 type Config struct {
 	Server   ServerConfig
-	Storage  StorageConfig
 	Gmail    GmailConfig
 	Database DatabaseConfig
+	OpenAI   OpenAIConfig
 }

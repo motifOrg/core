@@ -87,7 +87,25 @@ func (r *OpportunityRepository) Create(opportunity *model.InboundOpportunity) er
 	return r.db.Create(opportunity).Error
 }
 
-func (r *OpportunityRepository) Update(id uuid.UUID, fields map[string]interface{}) error {
+func (r *OpportunityRepository) Exists(
+	source string,
+	externalRef string,
+) (bool, error) {
+	if externalRef == "" {
+		return false, nil
+	}
+
+	var count int64
+
+	err := r.db.
+		Model(&model.InboundOpportunity{}).
+		Where("source = ? AND external_ref = ?", source, externalRef).
+		Count(&count).Error
+
+	return count > 0, err
+}
+
+func (r *OpportunityRepository) Update(id uuid.UUID, fields map[string]any) error {
 	result := r.db.
 		Model(&model.InboundOpportunity{}).
 		Where("id = ?", id).

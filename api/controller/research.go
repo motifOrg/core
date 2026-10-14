@@ -95,7 +95,7 @@ func (c *Controller) CreateFinding(context *gin.Context) {
 //	@Produce		json
 //	@Param			id			path		string	true	"Company ID"
 //	@Param			findingId	path		string	true	"Finding ID"
-//	@Success		200			{object}	map[string]interface{}
+//	@Success		200			{object}	map[string]any
 //	@Failure		404			{object}	ErrorResponse
 //	@Router			/companies/{id}/findings/{findingId} [delete]
 func (c *Controller) DeleteFinding(context *gin.Context) {
@@ -126,7 +126,7 @@ func (c *Controller) DeleteFinding(context *gin.Context) {
 // RunResearch godoc
 //
 //	@Summary		Run research
-//	@Description	Runs the configured research provider. Returns 503 until a provider is implemented.
+//	@Description	Runs the enrichment agent and saves findings. Returns 503 when OPENAI_API_KEY is not set.
 //	@Tags			research
 //	@Produce		json
 //	@Param			id	path		string	true	"Company ID"
@@ -152,7 +152,7 @@ func (c *Controller) RunResearch(context *gin.Context) {
 	}
 
 	icp, _ := c.campaigns.GetICP(company.CampaignID)
-	findings, err := c.researcher.Run(context.Request.Context(), *company, icp)
+	findings, err := c.researcher.Run(*company, icp)
 	if errors.Is(err, service.ErrResearchNotConfigured) {
 		context.JSON(
 			http.StatusServiceUnavailable,
@@ -174,25 +174,6 @@ func (c *Controller) RunResearch(context *gin.Context) {
 
 		return
 	}
-
-	for i := range findings {
-		findings[i].CompanyID = id
-		if err := c.research.CreateFinding(&findings[i]);
-			err != nil {
-			logger.Error(
-				"Failed to save findings: %v",
-				err,
-			)
-
-			context.JSON(
-				http.StatusInternalServerError,
-				gin.H{"error": err.Error()},
-			)
-
-			return
-		}
-	}
-	_ = c.companies.Update(id, map[string]interface{}{"research_status": model.ResearchComplete})
 
 	context.JSON(
 		http.StatusOK,
@@ -319,7 +300,8 @@ func (c *Controller) CreateMessage(context *gin.Context) {
 
 	created := []model.ResearchMessage{question}
 	if c.researcher.Enabled() {
-		reply, err := c.researcher.Ask(context.Request.Context(), *company, history, body)
+		icp, _ := c.campaigns.GetICP(company.CampaignID)
+		reply, err := c.researcher.Ask(*company, icp, history, body)
 		if err != nil {
 			logger.Error(
 				"Failed to ask research assistant: %v",

@@ -8,6 +8,7 @@ CREATE TABLE campaigns (
         CHECK (status IN ('draft', 'active', 'paused', 'archived')),
     workflow TEXT NOT NULL DEFAULT 'outbound'
         CHECK (workflow IN ('outbound', 'inbound', 'both')),
+    gmail_label TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -33,18 +34,6 @@ CREATE TABLE icp_criteria (
     CHECK (employees_min IS NULL OR employees_max IS NULL OR employees_min <= employees_max)
 );
 
-CREATE TABLE documents (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-    filename TEXT NOT NULL,
-    storage_key TEXT NOT NULL,
-    mime_type TEXT NOT NULL,
-    size_bytes BIGINT NOT NULL DEFAULT 0,
-    status TEXT NOT NULL DEFAULT 'uploaded'
-        CHECK (status IN ('uploaded', 'processing', 'processed', 'failed')),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
 CREATE TABLE companies (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
@@ -58,7 +47,7 @@ CREATE TABLE companies (
     founded_year INT,
     owner_name TEXT NOT NULL DEFAULT '',
     source TEXT NOT NULL DEFAULT 'manual'
-        CHECK (source IN ('sample', 'csv', 'manual', 'inbound')),
+        CHECK (source IN ('sample', 'csv', 'manual', 'inbound', 'gmail')),
     is_sample BOOLEAN NOT NULL DEFAULT false,
     fit_score INT CHECK (fit_score IS NULL OR fit_score BETWEEN 0 AND 100),
     fit_summary TEXT NOT NULL DEFAULT '',
@@ -144,7 +133,6 @@ CREATE TABLE message_drafts (
 
 CREATE INDEX idx_companies_campaign ON companies(campaign_id);
 CREATE INDEX idx_companies_fit ON companies(campaign_id, fit_score DESC NULLS LAST);
-CREATE INDEX idx_documents_campaign ON documents(campaign_id);
 CREATE INDEX idx_findings_company ON research_findings(company_id);
 CREATE INDEX idx_messages_company ON research_messages(company_id, created_at);
 CREATE INDEX idx_inbound_campaign ON inbound_opportunities(campaign_id, received_at DESC);

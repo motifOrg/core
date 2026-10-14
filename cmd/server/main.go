@@ -4,7 +4,9 @@ import (
 	router "core/api/router"
 	config "core/internal/config"
 	database "core/internal/database"
+	gmail "core/pkg/gmail"
 	logger "core/pkg/log"
+	openai "core/pkg/openai"
 	"net/http"
 	"time"
 
@@ -16,6 +18,9 @@ func main() {
 
 	cfg, err := config.Load()
 	logger.Fatal(err, "Failed to load env")
+
+	openai.Configure(&cfg.OpenAI)
+	gmail.Configure(&cfg.Gmail)
 
 	gormDB := database.Init(&cfg.Database)
 	sqlDB, err := gormDB.DB()

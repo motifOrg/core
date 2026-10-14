@@ -198,7 +198,7 @@ func (c *Controller) UpdateDraft(context *gin.Context) {
 		return
 	}
 
-	fields := map[string]interface{}{}
+	fields := map[string]any{}
 	if request.Recipient != nil {
 		fields["recipient"] = strings.TrimSpace(*request.Recipient)
 	}
@@ -264,7 +264,7 @@ func (c *Controller) UpdateDraft(context *gin.Context) {
 //	@Tags			drafts
 //	@Produce		json
 //	@Param			id	path		string	true	"Draft ID"
-//	@Success		200	{object}	map[string]interface{}
+//	@Success		200	{object}	map[string]any
 //	@Failure		404	{object}	ErrorResponse
 //	@Router			/drafts/{id} [delete]
 func (c *Controller) DeleteDraft(context *gin.Context) {

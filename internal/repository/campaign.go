@@ -17,8 +17,7 @@ func NewCampaigns(db *gorm.DB) *CampaignRepository {
 
 const campaignCounts = `campaigns.*,
 	(SELECT COUNT(*) FROM companies WHERE companies.campaign_id = campaigns.id) AS company_count,
-	(SELECT COUNT(*) FROM inbound_opportunities WHERE inbound_opportunities.campaign_id = campaigns.id) AS opportunity_count,
-	(SELECT COUNT(*) FROM documents WHERE documents.campaign_id = campaigns.id) AS document_count`
+	(SELECT COUNT(*) FROM inbound_opportunities WHERE inbound_opportunities.campaign_id = campaigns.id) AS opportunity_count`
 
 func (r *CampaignRepository) List(q string, status string) ([]model.Campaign, error) {
 	query := r.db.
@@ -76,7 +75,7 @@ func (r *CampaignRepository) Create(campaign *model.Campaign, icp *model.ICPCrit
 	})
 }
 
-func (r *CampaignRepository) Update(id uuid.UUID, fields map[string]interface{}) error {
+func (r *CampaignRepository) Update(id uuid.UUID, fields map[string]any) error {
 	result := r.db.
 		Model(&model.Campaign{}).
 		Where("id = ?", id).
@@ -147,7 +146,7 @@ func (r *CampaignRepository) Stats(campaignID uuid.UUID) (CampaignStats, error) 
 				WHERE campaign_id = @id AND status = 'new') AS inbound_new
 		FROM companies
 		WHERE campaign_id = @id
-	`, map[string]interface{}{"id": campaignID}).
+	`, map[string]any{"id": campaignID}).
 		Scan(&stats).Error
 	return stats, err
 }

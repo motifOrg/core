@@ -6,6 +6,8 @@ import (
 	controller "core/api/controller"
 	config "core/internal/config"
 	service "core/internal/service"
+	gmail "core/pkg/gmail"
+	openai "core/pkg/openai"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -18,9 +20,8 @@ func Config(db *gorm.DB, cfg *config.Config) http.Handler {
 
 	controllers := controller.Create(
 		db,
-		service.NewStorage(cfg.Storage.UploadDir, int64(cfg.Storage.MaxUploadMB)<<20),
-		service.NewResearch(nil),
-		service.NewGmail(&cfg.Gmail, nil),
+		service.NewResearch(db, openai.Client),
+		service.NewGmail(gmail.Client, &cfg.Gmail),
 	)
 
 	router.Use(cors.New(cors.Config{
@@ -49,12 +50,8 @@ func Config(db *gorm.DB, cfg *config.Config) http.Handler {
 			campaigns.GET("/:id/stats", controllers.GetCampaignStats)
 			campaigns.GET("/:id/icp", controllers.GetICP)
 			campaigns.PUT("/:id/icp", controllers.UpdateICP)
-			campaigns.GET("/:id/documents", controllers.GetDocuments)
-			campaigns.POST("/:id/documents", controllers.UploadDocument)
 			campaigns.POST("/:id/companies/import", controllers.ImportCompanies)
 		}
-
-		v1.DELETE("/documents/:id", controllers.DeleteDocument)
 
 		companies := v1.Group("/companies")
 		{

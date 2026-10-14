@@ -96,6 +96,31 @@ func (r *CompanyRepository) Create(company *model.Company) error {
 	return r.db.Omit("Findings").Create(company).Error
 }
 
+func (r *CompanyRepository) GetByDomain(
+	campaignID uuid.UUID,
+	domain string,
+) (*model.Company, error) {
+	if domain == "" {
+		return nil, nil
+	}
+
+	var company model.Company
+
+	err := r.db.
+		Where("campaign_id = ? AND lower(domain) = lower(?)", campaignID, domain).
+		First(&company).Error
+
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &company, nil
+}
+
 func (r *CompanyRepository) DomainExists(campaignID uuid.UUID, domain string) (bool, error) {
 	if domain == "" {
 		return false, nil
@@ -108,7 +133,7 @@ func (r *CompanyRepository) DomainExists(campaignID uuid.UUID, domain string) (b
 	return count > 0, err
 }
 
-func (r *CompanyRepository) InsertIgnoreDuplicates(companies []model.Company) (inserted int, skipped int, err error) {
+func (r *CompanyRepository) InsertIgnoreDuplicates(companies []model.Company) (inserted []model.Company, skipped int, err error) {
 	for _, company := range companies {
 		exists, err := r.DomainExists(company.CampaignID, company.Domain)
 		if err != nil {
@@ -122,12 +147,12 @@ func (r *CompanyRepository) InsertIgnoreDuplicates(companies []model.Company) (i
 			err != nil {
 			return inserted, skipped, err
 		}
-		inserted++
+		inserted = append(inserted, company)
 	}
 	return inserted, skipped, nil
 }
 
-func (r *CompanyRepository) Update(id uuid.UUID, fields map[string]interface{}) error {
+func (r *CompanyRepository) Update(id uuid.UUID, fields map[string]any) error {
 	result := r.db.
 		Model(&model.Company{}).
 		Where("id = ?", id).

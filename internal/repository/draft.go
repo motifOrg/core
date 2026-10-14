@@ -44,7 +44,7 @@ func (r *DraftRepository) Create(draft *model.MessageDraft) error {
 	return r.db.Create(draft).Error
 }
 
-func (r *DraftRepository) Update(id uuid.UUID, fields map[string]interface{}) error {
+func (r *DraftRepository) Update(id uuid.UUID, fields map[string]any) error {
 	result := r.db.
 		Model(&model.MessageDraft{}).
 		Where("id = ?", id).

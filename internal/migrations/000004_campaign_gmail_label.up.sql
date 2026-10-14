@@ -1,0 +1,2 @@
+ALTER TABLE campaigns
+    ADD COLUMN IF NOT EXISTS gmail_label TEXT NOT NULL DEFAULT '';

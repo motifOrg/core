@@ -15,15 +15,11 @@ func Load() (*Config, error) {
 			Port:      ":" + GetEnv("PORT", "8000"),
 			AppOrigin: GetEnv("APP_ORIGIN", "http://localhost:3000"),
 		},
-		Storage: StorageConfig{
-			UploadDir:   GetEnv("UPLOAD_DIR", "./uploads"),
-			MaxUploadMB: GetEnvInt("MAX_UPLOAD_MB", 25),
-		},
 		Gmail: GmailConfig{
 			ClientID:     GetEnv("GMAIL_CLIENT_ID", ""),
 			ClientSecret: GetEnv("GMAIL_CLIENT_SECRET", ""),
-			RedirectURL:  GetEnv("GMAIL_REDIRECT_URL", ""),
-			TokenKey:     GetEnv("TOKEN_ENCRYPTION_KEY", ""),
+			RedirectURL:  GetEnv("GMAIL_REDIRECT_URL", "http://localhost"),
+			RefreshToken: GetEnv("GMAIL_REFRESH_TOKEN", ""),
 		},
 		Database: DatabaseConfig{
 			Name:     GetEnv("DB_NAME", "motif"),
@@ -32,6 +28,9 @@ func Load() (*Config, error) {
 			Host:     GetEnv("DB_HOST", "localhost"),
 			Port:     GetEnv("DB_PORT", "5432"),
 			SSL:      GetEnv("DB_SSLMODE", "disable"),
+		},
+		OpenAI: OpenAIConfig{
+			SecretKey: GetEnv("OPENAI_API_KEY", ""),
 		},
 	}, nil
 }

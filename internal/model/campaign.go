@@ -31,7 +31,6 @@ type Campaign struct {
 
 	CompanyCount     int64 `gorm:"->;-:migration" json:"company_count"`
 	OpportunityCount int64 `gorm:"->;-:migration" json:"opportunity_count"`
-	DocumentCount    int64 `gorm:"->;-:migration" json:"document_count"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
