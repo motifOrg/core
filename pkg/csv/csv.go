@@ -97,7 +97,11 @@ type headerIndex struct {
 func mapHeaders(header []string) headerIndex {
 	idx := headerIndex{-1, -1, -1, -1, -1, -1, -1, -1, -1}
 	for i, col := range header {
-		switch normalizeHeader(col) {
+		col = strings.ToLower(strings.TrimSpace(col))
+		col = strings.TrimPrefix(col, "\ufeff")
+		col = strings.NewReplacer(" ", "", "_", "", "-", "").Replace(col)
+
+		switch col {
 		case "name", "company", "companyname", "business", "businessname":
 			idx.name = i
 		case "domain", "website", "url", "site":
@@ -119,15 +123,6 @@ func mapHeaders(header []string) headerIndex {
 		}
 	}
 	return idx
-}
-
-func normalizeHeader(value string) string {
-	value = strings.ToLower(strings.TrimSpace(value))
-	value = strings.TrimPrefix(value, "\ufeff")
-	value = strings.ReplaceAll(value, " ", "")
-	value = strings.ReplaceAll(value, "_", "")
-	value = strings.ReplaceAll(value, "-", "")
-	return value
 }
 
 func fieldAt(record []string, index int) string {

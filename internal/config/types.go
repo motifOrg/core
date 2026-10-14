@@ -6,10 +6,8 @@ type ServerConfig struct {
 }
 
 type GmailConfig struct {
-	ClientID     string
-	ClientSecret string
-	RedirectURL  string
-	RefreshToken string
+	Credentials string
+	User        string
 }
 
 type DatabaseConfig struct {

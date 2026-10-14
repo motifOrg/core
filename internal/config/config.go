@@ -16,10 +16,8 @@ func Load() (*Config, error) {
 			AppOrigin: GetEnv("APP_ORIGIN", "http://localhost:3000"),
 		},
 		Gmail: GmailConfig{
-			ClientID:     GetEnv("GMAIL_CLIENT_ID", ""),
-			ClientSecret: GetEnv("GMAIL_CLIENT_SECRET", ""),
-			RedirectURL:  GetEnv("GMAIL_REDIRECT_URL", "http://localhost"),
-			RefreshToken: GetEnv("GMAIL_REFRESH_TOKEN", ""),
+			Credentials: GetEnv("GMAIL_CREDENTIALS", ""),
+			User:        GetEnv("GMAIL_USER", ""),
 		},
 		Database: DatabaseConfig{
 			Name:     GetEnv("DB_NAME", "motif"),

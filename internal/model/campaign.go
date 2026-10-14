@@ -26,6 +26,7 @@ type Campaign struct {
 	Description string `json:"description"`
 	Status      string `gorm:"default:draft" json:"status"`
 	Workflow    string `gorm:"default:outbound" json:"workflow"`
+	GmailLabel  string `json:"gmail_label"`
 
 	ICP *ICPCriteria `gorm:"foreignKey:CampaignID" json:"icp,omitempty"`
 

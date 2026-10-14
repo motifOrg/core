@@ -43,7 +43,7 @@ internal/model/        GORM models and enums
 internal/repository/   queries
 internal/service/      research and Gmail
 pkg/csv/               company CSV parser
-pkg/gmail/             Gmail API client (env refresh token)
+pkg/gmail/             Gmail API client (service account)
 pkg/log/               logger
 pkg/openai/            OpenAI client, enrichment agent and research tools
 script/                bootstrap, migrate, seed, swagger
@@ -78,13 +78,11 @@ Base path `/api/v1`. Responses are `{"data": ...}` (lists add `total`, `page`, `
 Both live in `internal/service` and are nil today, so the API reports them as not configured instead of faking results.
 
 - `ResearchProvider`: `Research(company, icp)` returns findings, `Ask(company, history, question)` returns a reply. This is where web search, LLM orchestration or MCP tools would go.
-- Gmail: set `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` in `.env`. Set `gmail_label` per campaign in the app; when empty, sync uses `INBOX`.
+- Gmail: uses a Google Workspace service account with domain-wide delegation. In Google Cloud, create a service account and download its JSON key. In Workspace admin (Security → API controls → Domain-wide delegation), add the service account client ID with scope `https://www.googleapis.com/auth/gmail.readonly`. Set `gmail_label` per campaign in the app; when empty, sync uses `INBOX`.
 
 ```env
-GMAIL_CLIENT_ID=
-GMAIL_CLIENT_SECRET=
-GMAIL_REFRESH_TOKEN=
-GMAIL_REDIRECT_URL=http://localhost
+GMAIL_CREDENTIALS=/path/to/service-account.json
+GMAIL_USER=deals@yourfirm.com
 ```
 
 There is no send path anywhere in the API.

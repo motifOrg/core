@@ -16,8 +16,6 @@ import (
 
 func Config(db *gorm.DB, cfg *config.Config) http.Handler {
 	router := gin.Default()
-	router.MaxMultipartMemory = 8 << 20
-
 	controllers := controller.Create(
 		db,
 		service.NewResearch(db, openai.Client),

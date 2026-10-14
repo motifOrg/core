@@ -6,11 +6,9 @@ import (
 )
 
 const (
-	Reset         = "\033[0m"
-	RedBright     = "\033[91m"
-	GreenBright   = "\033[92m"
-	YellowBright  = "\033[93m"
-	CyanBright    = "\033[96m"
+	Reset      = "\033[0m"
+	RedBright  = "\033[91m"
+	CyanBright = "\033[96m"
 )
 
 func logMessage(color, label, symbol, format string, args ...any) {

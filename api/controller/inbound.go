@@ -36,7 +36,7 @@ type ResearchStatus struct {
 }
 
 type IntegrationsData struct {
-	Gmail    interface{}    `json:"gmail"`
+	Gmail    any    `json:"gmail"`
 	Research ResearchStatus `json:"research"`
 }
 
@@ -212,7 +212,7 @@ func (c *Controller) UpdateOpportunity(context *gin.Context) {
 		return
 	}
 
-	fields := map[string]interface{}{}
+	fields := map[string]any{}
 	if request.Status != nil {
 		fields["status"] = *request.Status
 	}
@@ -276,11 +276,11 @@ func (c *Controller) UpdateOpportunity(context *gin.Context) {
 //	@Router			/integrations [get]
 func (c *Controller) GetIntegrations(context *gin.Context) {
 	research := ResearchStatus{
-		Status:  "not_implemented",
-		Message: "No research provider is connected. Findings can be added manually.",
+		Status:  "setup_required",
+		Message: "OPENAI_API_KEY is not set. Findings can be added manually.",
 	}
 	if c.researcher.Enabled() {
-		research = ResearchStatus{Status: "ready", Message: "Research provider connected."}
+		research = ResearchStatus{Status: "ready", Message: "OpenAI research agent connected."}
 	}
 
 	context.JSON(
@@ -295,13 +295,26 @@ func (c *Controller) GetIntegrations(context *gin.Context) {
 // SyncGmail godoc
 //
 //	@Summary		Sync Gmail
-//	@Description	Pulls new inbound emails. Returns 503 until Gmail OAuth is implemented and connected.
+//	@Description	Pulls the last 7 days of inbound emails, adds sender companies as leads and enriches them. Returns 503 until Gmail OAuth is connected.
 //	@Tags			integrations
 //	@Produce		json
-//	@Success		200	{object}	map[string]interface{}
-//	@Failure		503	{object}	ErrorResponse
+//	@Param			campaign_id	query		string	true	"Campaign ID"
+//	@Success		200			{object}	map[string]any
+//	@Failure		503			{object}	ErrorResponse
 //	@Router			/integrations/gmail/sync [post]
 func (c *Controller) SyncGmail(context *gin.Context) {
+	campaignID, _ := uuid.Parse(context.Query("campaign_id"))
+
+	campaign, err := c.campaigns.Get(campaignID)
+	if err != nil {
+		context.JSON(
+			http.StatusNotFound,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
 	if !c.gmail.Enabled() {
 		context.JSON(
 			http.StatusServiceUnavailable,
@@ -310,8 +323,140 @@ func (c *Controller) SyncGmail(context *gin.Context) {
 		return
 	}
 
+	messages, err := c.gmail.Sync(
+		context.Request.Context(),
+		time.Now().AddDate(0, 0, -7),
+		strings.TrimSpace(campaign.GmailLabel),
+	)
+
+	if err != nil {
+		logger.Error(
+			"Failed to sync gmail: %v",
+			err,
+		)
+
+		context.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	leads := []model.Company{}
+	for _, message := range messages {
+		if message.ExternalRef != "" {
+			exists, err := c.opportunities.Exists(
+				model.SourceGmail,
+				message.ExternalRef,
+			)
+			if err != nil {
+				logger.Error(
+					"Failed to check gmail message: %v",
+					err,
+				)
+
+				context.JSON(
+					http.StatusInternalServerError,
+					gin.H{"error": err.Error()},
+				)
+
+				return
+			}
+
+			if exists {
+				continue
+			}
+		}
+
+		_, domain, _ := strings.Cut(message.SenderEmail, "@")
+		domain = csv.NormalizeDomain(domain)
+
+		inserted, _, err := c.companies.InsertIgnoreDuplicates([]model.Company{{
+			CampaignID: campaignID,
+			Name:       domain,
+			Domain:     domain,
+			Source:     model.SourceGmail,
+		}})
+		if err != nil {
+			logger.Error(
+				"Failed to add lead: %v",
+				err,
+			)
+
+			context.JSON(
+				http.StatusInternalServerError,
+				gin.H{"error": err.Error()},
+			)
+
+			return
+		}
+
+		opportunity := model.InboundOpportunity{
+			CampaignID:    campaignID,
+			Source:        model.SourceGmail,
+			ExternalRef:   message.ExternalRef,
+			SenderName:    message.SenderName,
+			SenderEmail:   message.SenderEmail,
+			Subject:       message.Subject,
+			Body:          message.Body,
+			CompanyName:   domain,
+			CompanyDomain: domain,
+			ReceivedAt:    message.ReceivedAt,
+			Priority:      model.PriorityMedium,
+			Status:        model.OpportunityNew,
+		}
+		if len(inserted) > 0 {
+			opportunity.CompanyID = &inserted[0].ID
+			leads = append(leads, inserted[0])
+		} else if domain != "" {
+			company, err := c.companies.GetByDomain(campaignID, domain)
+			if err != nil {
+				logger.Error(
+					"Failed to load lead: %v",
+					err,
+				)
+
+				context.JSON(
+					http.StatusInternalServerError,
+					gin.H{"error": err.Error()},
+				)
+
+				return
+			}
+
+			if company != nil {
+				opportunity.CompanyID = &company.ID
+			}
+		}
+
+		if err := c.opportunities.Create(&opportunity);
+			err != nil {
+			logger.Error(
+				"Failed to create opportunity: %v",
+				err,
+			)
+
+			context.JSON(
+				http.StatusInternalServerError,
+				gin.H{"error": err.Error()},
+			)
+
+			return
+		}
+	}
+
+	if c.researcher.Enabled() {
+		icp, _ := c.campaigns.GetICP(campaignID)
+		go c.researcher.Enrich(leads, icp)
+	}
+
 	context.JSON(
-		http.StatusNotImplemented,
-		gin.H{"error": "gmail sync is not implemented"},
+		http.StatusOK,
+		gin.H{"data": gin.H{
+			"messages":    len(messages),
+			"leads":       len(leads),
+			"gmail_label": campaign.GmailLabel,
+		}},
 	)
 }
