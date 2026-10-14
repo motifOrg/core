@@ -1,0 +1,1477 @@
+basePath: /api/v1
+definitions:
+  api_controller.CampaignStatsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/core_internal_repository.CampaignStats'
+    type: object
+  api_controller.CompaniesResponse:
+    properties:
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/core_internal_model.Company'
+        type: array
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  api_controller.CreateCampaignRequest:
+    properties:
+      description:
+        maxLength: 2000
+        type: string
+      gmail_label:
+        maxLength: 120
+        type: string
+      icp:
+        $ref: '#/definitions/api_controller.ICPRequest'
+      name:
+        maxLength: 120
+        type: string
+      status:
+        enum:
+        - draft
+        - active
+        type: string
+      workflow:
+        enum:
+        - outbound
+        - inbound
+        - both
+        type: string
+    required:
+    - name
+    type: object
+  api_controller.CreateCompanyRequest:
+    properties:
+      campaign_id:
+        type: string
+      description:
+        maxLength: 4000
+        type: string
+      domain:
+        maxLength: 200
+        type: string
+      employees:
+        minimum: 0
+        type: integer
+      founded_year:
+        maximum: 2100
+        minimum: 1800
+        type: integer
+      industry:
+        maxLength: 120
+        type: string
+      location:
+        maxLength: 120
+        type: string
+      name:
+        maxLength: 200
+        type: string
+      owner_name:
+        maxLength: 120
+        type: string
+      revenue_estimate:
+        maxLength: 60
+        type: string
+    required:
+    - campaign_id
+    - name
+    type: object
+  api_controller.CreateDraftRequest:
+    properties:
+      body:
+        maxLength: 20000
+        type: string
+      company_id:
+        type: string
+      opportunity_id:
+        type: string
+      recipient:
+        maxLength: 200
+        type: string
+      subject:
+        maxLength: 300
+        type: string
+    type: object
+  api_controller.CreateFindingRequest:
+    properties:
+      confidence:
+        enum:
+        - high
+        - medium
+        - low
+        type: string
+      content:
+        maxLength: 4000
+        type: string
+      kind:
+        enum:
+        - fit
+        - finding
+        - risk
+        - missing
+        - next_action
+        type: string
+      source_url:
+        maxLength: 500
+        type: string
+      title:
+        maxLength: 200
+        type: string
+    required:
+    - kind
+    - title
+    type: object
+  api_controller.CreateMessageRequest:
+    properties:
+      body:
+        maxLength: 4000
+        type: string
+    required:
+    - body
+    type: object
+  api_controller.CreateOpportunityRequest:
+    properties:
+      body:
+        maxLength: 20000
+        type: string
+      campaign_id:
+        type: string
+      company_domain:
+        maxLength: 200
+        type: string
+      company_name:
+        maxLength: 200
+        type: string
+      sender_email:
+        maxLength: 200
+        type: string
+      sender_name:
+        maxLength: 120
+        type: string
+      subject:
+        maxLength: 300
+        type: string
+    required:
+    - campaign_id
+    - sender_email
+    - subject
+    type: object
+  api_controller.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  api_controller.ICPRequest:
+    properties:
+      business_models:
+        items:
+          type: string
+        maxItems: 30
+        type: array
+      characteristics:
+        items:
+          type: string
+        maxItems: 30
+        type: array
+      ebitda_min:
+        minimum: 0
+        type: integer
+      employees_max:
+        minimum: 0
+        type: integer
+      employees_min:
+        minimum: 0
+        type: integer
+      exclusions:
+        items:
+          type: string
+        maxItems: 30
+        type: array
+      geographies:
+        items:
+          type: string
+        maxItems: 30
+        type: array
+      industries:
+        items:
+          type: string
+        maxItems: 30
+        type: array
+      ownership:
+        maxLength: 200
+        type: string
+      revenue_max:
+        minimum: 0
+        type: integer
+      revenue_min:
+        minimum: 0
+        type: integer
+      thesis:
+        maxLength: 2000
+        type: string
+    type: object
+  api_controller.ImportData:
+    properties:
+      errors:
+        items:
+          $ref: '#/definitions/core_pkg_csv.RowError'
+        type: array
+      failed:
+        type: integer
+      inserted:
+        type: integer
+      rows_processed:
+        type: integer
+      skipped:
+        type: integer
+    type: object
+  api_controller.IntegrationsData:
+    properties:
+      gmail: {}
+      research:
+        $ref: '#/definitions/api_controller.ResearchStatus'
+    type: object
+  api_controller.ResearchStatus:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  api_controller.UpdateCampaignRequest:
+    properties:
+      description:
+        maxLength: 2000
+        type: string
+      gmail_label:
+        maxLength: 120
+        type: string
+      name:
+        maxLength: 120
+        minLength: 1
+        type: string
+      status:
+        enum:
+        - draft
+        - active
+        - paused
+        - archived
+        type: string
+      workflow:
+        enum:
+        - outbound
+        - inbound
+        - both
+        type: string
+    type: object
+  api_controller.UpdateCompanyRequest:
+    properties:
+      description:
+        maxLength: 4000
+        type: string
+      domain:
+        maxLength: 200
+        type: string
+      employees:
+        minimum: 0
+        type: integer
+      evaluation_status:
+        enum:
+        - new
+        - shortlisted
+        - contacted
+        - in_discussion
+        - rejected
+        type: string
+      industry:
+        maxLength: 120
+        type: string
+      location:
+        maxLength: 120
+        type: string
+      name:
+        maxLength: 200
+        minLength: 1
+        type: string
+      owner_name:
+        maxLength: 120
+        type: string
+      priority:
+        enum:
+        - high
+        - medium
+        - low
+        type: string
+      research_status:
+        enum:
+        - not_started
+        - in_progress
+        - complete
+        type: string
+      revenue_estimate:
+        maxLength: 60
+        type: string
+    type: object
+  api_controller.UpdateDraftRequest:
+    properties:
+      body:
+        maxLength: 20000
+        type: string
+      recipient:
+        maxLength: 200
+        type: string
+      status:
+        enum:
+        - draft
+        - reviewed
+        type: string
+      subject:
+        maxLength: 300
+        type: string
+    type: object
+  api_controller.UpdateOpportunityRequest:
+    properties:
+      fit_summary:
+        maxLength: 4000
+        type: string
+      priority:
+        enum:
+        - high
+        - medium
+        - low
+        type: string
+      status:
+        enum:
+        - new
+        - reviewing
+        - qualified
+        - declined
+        type: string
+    type: object
+  core_internal_model.Campaign:
+    properties:
+      company_count:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      gmail_label:
+        type: string
+      icp:
+        $ref: '#/definitions/core_internal_model.ICPCriteria'
+      id:
+        type: string
+      name:
+        type: string
+      opportunity_count:
+        type: integer
+      status:
+        type: string
+      updated_at:
+        type: string
+      workflow:
+        type: string
+    type: object
+  core_internal_model.Company:
+    properties:
+      campaign_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      domain:
+        type: string
+      employees:
+        type: integer
+      evaluation_status:
+        type: string
+      findings:
+        items:
+          $ref: '#/definitions/core_internal_model.ResearchFinding'
+        type: array
+      fit_score:
+        type: integer
+      fit_summary:
+        type: string
+      founded_year:
+        type: integer
+      id:
+        type: string
+      industry:
+        type: string
+      is_sample:
+        type: boolean
+      location:
+        type: string
+      name:
+        type: string
+      owner_name:
+        type: string
+      priority:
+        type: string
+      research_status:
+        type: string
+      revenue_estimate:
+        type: string
+      source:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  core_internal_model.ICPCriteria:
+    properties:
+      business_models:
+        items:
+          type: string
+        type: array
+      campaign_id:
+        type: string
+      characteristics:
+        items:
+          type: string
+        type: array
+      created_at:
+        type: string
+      ebitda_min:
+        type: integer
+      employees_max:
+        type: integer
+      employees_min:
+        type: integer
+      exclusions:
+        items:
+          type: string
+        type: array
+      geographies:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      industries:
+        items:
+          type: string
+        type: array
+      ownership:
+        type: string
+      revenue_max:
+        type: integer
+      revenue_min:
+        type: integer
+      thesis:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  core_internal_model.InboundOpportunity:
+    properties:
+      body:
+        type: string
+      campaign_id:
+        type: string
+      company_domain:
+        type: string
+      company_id:
+        type: string
+      company_name:
+        type: string
+      created_at:
+        type: string
+      external_ref:
+        type: string
+      fit_score:
+        type: integer
+      fit_summary:
+        type: string
+      id:
+        type: string
+      is_sample:
+        type: boolean
+      priority:
+        type: string
+      received_at:
+        type: string
+      sender_email:
+        type: string
+      sender_name:
+        type: string
+      source:
+        type: string
+      status:
+        type: string
+      subject:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  core_internal_model.MessageDraft:
+    properties:
+      body:
+        type: string
+      company_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      opportunity_id:
+        type: string
+      recipient:
+        type: string
+      status:
+        type: string
+      subject:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  core_internal_model.ResearchFinding:
+    properties:
+      company_id:
+        type: string
+      confidence:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      evidence_status:
+        type: string
+      id:
+        type: string
+      kind:
+        type: string
+      source_url:
+        type: string
+      title:
+        type: string
+    type: object
+  core_internal_model.ResearchMessage:
+    properties:
+      body:
+        type: string
+      company_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      sender_role:
+        type: string
+    type: object
+  core_internal_repository.CampaignStats:
+    properties:
+      companies:
+        type: integer
+      contacted:
+        type: integer
+      high_priority:
+        type: integer
+      inbound_new:
+        type: integer
+      researched:
+        type: integer
+      shortlisted:
+        type: integer
+    type: object
+  core_pkg_csv.RowError:
+    properties:
+      message:
+        type: string
+      row:
+        type: integer
+    type: object
+info:
+  contact: {}
+  description: 'Acquisition sourcing: campaigns and ICP, leads, AI research, inbound
+    deals and drafts.'
+  title: Motif API
+  version: "1.0"
+paths:
+  /campaigns:
+    get:
+      description: Lists non-archived campaigns with company and inbound counts
+      parameters:
+      - description: Search by name
+        in: query
+        name: q
+        type: string
+      - description: draft|active|paused|archived|all (default excludes archived)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core_internal_model.Campaign'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: List campaigns
+      tags:
+      - campaigns
+    post:
+      consumes:
+      - application/json
+      description: Creates a campaign and its ICP criteria in one transaction
+      parameters:
+      - description: Campaign
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api_controller.CreateCampaignRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/core_internal_model.Campaign'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Create campaign
+      tags:
+      - campaigns
+  /campaigns/{id}:
+    delete:
+      description: Deletes a campaign with its ICP, companies, inbound opportunities
+        and drafts
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Delete campaign
+      tags:
+      - campaigns
+    get:
+      description: Returns a campaign with its ICP criteria
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/core_internal_model.Campaign'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Get campaign
+      tags:
+      - campaigns
+    patch:
+      consumes:
+      - application/json
+      description: Partially updates name, description, workflow or status
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api_controller.UpdateCampaignRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/core_internal_model.Campaign'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Update campaign
+      tags:
+      - campaigns
+  /campaigns/{id}/companies/import:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a CSV with at least a name column. Domains already in the
+        campaign are skipped.
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: CSV file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api_controller.ImportData'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Import companies from CSV
+      tags:
+      - companies
+  /campaigns/{id}/icp:
+    get:
+      description: Returns the structured acquisition criteria for a campaign
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/core_internal_model.ICPCriteria'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Get ICP
+      tags:
+      - campaigns
+    put:
+      consumes:
+      - application/json
+      description: Replaces the structured acquisition criteria for a campaign
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Criteria
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api_controller.ICPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/core_internal_model.ICPCriteria'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Save ICP
+      tags:
+      - campaigns
+  /campaigns/{id}/stats:
+    get:
+      description: Lead and inbound counts for the dashboard
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api_controller.CampaignStatsResponse'
+      summary: Campaign stats
+      tags:
+      - campaigns
+  /companies:
+    get:
+      description: Paginated, filterable lead list for a campaign
+      parameters:
+      - description: Campaign ID
+        in: query
+        name: campaign_id
+        required: true
+        type: string
+      - description: Search name, domain, industry, location
+        in: query
+        name: q
+        type: string
+      - description: 'Comma separated: high,medium,low'
+        in: query
+        name: priority
+        type: string
+      - description: 'Comma separated: not_started,in_progress,complete'
+        in: query
+        name: research_status
+        type: string
+      - description: 'Comma separated: new,shortlisted,contacted,in_discussion,rejected'
+        in: query
+        name: evaluation_status
+        type: string
+      - default: fit
+        description: fit|fit-asc|a-z|z-a|priority|recents
+        in: query
+        name: sort
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 25
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api_controller.CompaniesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: List companies
+      tags:
+      - companies
+    post:
+      consumes:
+      - application/json
+      description: Manually adds a target company to a campaign
+      parameters:
+      - description: Company
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api_controller.CreateCompanyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/core_internal_model.Company'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Add company
+      tags:
+      - companies
+  /companies/{id}:
+    delete:
+      description: Removes a company and its findings, chat and drafts from the campaign
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Remove company
+      tags:
+      - companies
+    get:
+      description: Company profile with research findings
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/core_internal_model.Company'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Get company
+      tags:
+      - companies
+    patch:
+      consumes:
+      - application/json
+      description: Partially updates profile fields, priority, research or evaluation
+        status
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api_controller.UpdateCompanyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/core_internal_model.Company'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Update company
+      tags:
+      - companies
+  /companies/{id}/findings:
+    post:
+      consumes:
+      - application/json
+      description: Records a manual research finding, risk, missing item or next action
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Finding
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api_controller.CreateFindingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/core_internal_model.ResearchFinding'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Add finding
+      tags:
+      - research
+  /companies/{id}/findings/{findingId}:
+    delete:
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Finding ID
+        in: path
+        name: findingId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Delete finding
+      tags:
+      - research
+  /companies/{id}/messages:
+    get:
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core_internal_model.ResearchMessage'
+            type: array
+      summary: Research chat history
+      tags:
+      - research
+    post:
+      consumes:
+      - application/json
+      description: Saves the question. An assistant reply is only added when a research
+        provider is configured.
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Question
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api_controller.CreateMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/core_internal_model.ResearchMessage'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Ask about a company
+      tags:
+      - research
+  /companies/{id}/research:
+    post:
+      description: Runs the enrichment agent and saves findings. Returns 503 when
+        OPENAI_API_KEY is not set.
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core_internal_model.ResearchFinding'
+            type: array
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Run research
+      tags:
+      - research
+  /companies/export:
+    get:
+      description: Prioritised lead list as CSV with fit, reasons, risks and source
+        URLs. Takes the same filters as the list.
+      parameters:
+      - description: Campaign ID
+        in: query
+        name: campaign_id
+        required: true
+        type: string
+      - description: Search name, domain, industry, location
+        in: query
+        name: q
+        type: string
+      - description: 'Comma separated: high,medium,low'
+        in: query
+        name: priority
+        type: string
+      - description: 'Comma separated: not_started,in_progress,complete'
+        in: query
+        name: research_status
+        type: string
+      - description: 'Comma separated: new,shortlisted,contacted,in_discussion,rejected'
+        in: query
+        name: evaluation_status
+        type: string
+      - default: priority
+        description: fit|fit-asc|a-z|z-a|priority|recents
+        in: query
+        name: sort
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Export companies
+      tags:
+      - companies
+  /drafts:
+    get:
+      description: Drafts for a company or an inbound opportunity
+      parameters:
+      - description: Company ID
+        in: query
+        name: company_id
+        type: string
+      - description: Opportunity ID
+        in: query
+        name: opportunity_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core_internal_model.MessageDraft'
+            type: array
+      summary: List drafts
+      tags:
+      - drafts
+    post:
+      consumes:
+      - application/json
+      description: Creates an outreach or reply draft. Outreach drafts with empty
+        subject and body are written by AI from the company, its findings and the
+        campaign ICP; otherwise a plain template fills them. Drafts are never sent.
+      parameters:
+      - description: Draft
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api_controller.CreateDraftRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/core_internal_model.MessageDraft'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Create draft
+      tags:
+      - drafts
+  /drafts/{id}:
+    delete:
+      parameters:
+      - description: Draft ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Delete draft
+      tags:
+      - drafts
+    patch:
+      consumes:
+      - application/json
+      description: Edits a draft or marks it reviewed. Editing a reviewed draft returns
+        it to draft.
+      parameters:
+      - description: Draft ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api_controller.UpdateDraftRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/core_internal_model.MessageDraft'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Update draft
+      tags:
+      - drafts
+  /inbound:
+    get:
+      description: Inbound deals for a campaign, new and high priority first, with
+        status counts
+      parameters:
+      - description: Campaign ID
+        in: query
+        name: campaign_id
+        required: true
+        type: string
+      - description: Search subject, sender or company
+        in: query
+        name: q
+        type: string
+      - description: new|reviewing|qualified|declined
+        in: query
+        name: status
+        type: string
+      - description: high|medium|low
+        in: query
+        name: priority
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core_internal_model.InboundOpportunity'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: List inbound opportunities
+      tags:
+      - inbound
+    post:
+      consumes:
+      - application/json
+      description: Manually records an inbound deal email until Gmail sync is available
+      parameters:
+      - description: Opportunity
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api_controller.CreateOpportunityRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/core_internal_model.InboundOpportunity'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Log inbound opportunity
+      tags:
+      - inbound
+  /inbound/{id}:
+    get:
+      parameters:
+      - description: Opportunity ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/core_internal_model.InboundOpportunity'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Get inbound opportunity
+      tags:
+      - inbound
+    patch:
+      consumes:
+      - application/json
+      description: Changes evaluation status, priority or the ICP fit note
+      parameters:
+      - description: Opportunity ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api_controller.UpdateOpportunityRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/core_internal_model.InboundOpportunity'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Update inbound opportunity
+      tags:
+      - inbound
+  /inbound/{id}/evaluate:
+    post:
+      description: Runs the research agent on the email against the campaign ICP and
+        saves fit score, summary and priority
+      parameters:
+      - description: Opportunity ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/core_internal_model.InboundOpportunity'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Evaluate inbound opportunity
+      tags:
+      - inbound
+  /integrations:
+    get:
+      description: Reports whether Gmail and the research provider are available
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api_controller.IntegrationsData'
+      summary: Integration status
+      tags:
+      - integrations
+  /integrations/gmail/sync:
+    post:
+      description: Pulls the last 7 days of inbound emails, adds sender companies
+        as leads and enriches them. Returns 503 until GMAIL_USER and GMAIL_APP_PASSWORD
+        are set.
+      parameters:
+      - description: Campaign ID
+        in: query
+        name: campaign_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/api_controller.ErrorResponse'
+      summary: Sync Gmail
+      tags:
+      - integrations
+swagger: "2.0"

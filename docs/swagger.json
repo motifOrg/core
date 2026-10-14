@@ -1,0 +1,2173 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Acquisition sourcing: campaigns and ICP, leads, AI research, inbound deals and drafts.",
+        "title": "Motif API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/api/v1",
+    "paths": {
+        "/campaigns": {
+            "get": {
+                "description": "Lists non-archived campaigns with company and inbound counts",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "campaigns"
+                ],
+                "summary": "List campaigns",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by name",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "draft|active|paused|archived|all (default excludes archived)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core_internal_model.Campaign"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a campaign and its ICP criteria in one transaction",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "campaigns"
+                ],
+                "summary": "Create campaign",
+                "parameters": [
+                    {
+                        "description": "Campaign",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.CreateCampaignRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.Campaign"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/campaigns/{id}": {
+            "get": {
+                "description": "Returns a campaign with its ICP criteria",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "campaigns"
+                ],
+                "summary": "Get campaign",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Campaign ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.Campaign"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a campaign with its ICP, companies, inbound opportunities and drafts",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "campaigns"
+                ],
+                "summary": "Delete campaign",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Campaign ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Partially updates name, description, workflow or status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "campaigns"
+                ],
+                "summary": "Update campaign",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Campaign ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.UpdateCampaignRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.Campaign"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/campaigns/{id}/companies/import": {
+            "post": {
+                "description": "Upload a CSV with at least a name column. Domains already in the campaign are skipped.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Import companies from CSV",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Campaign ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "CSV file",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ImportData"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/campaigns/{id}/icp": {
+            "get": {
+                "description": "Returns the structured acquisition criteria for a campaign",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "campaigns"
+                ],
+                "summary": "Get ICP",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Campaign ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.ICPCriteria"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Replaces the structured acquisition criteria for a campaign",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "campaigns"
+                ],
+                "summary": "Save ICP",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Campaign ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Criteria",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ICPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.ICPCriteria"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/campaigns/{id}/stats": {
+            "get": {
+                "description": "Lead and inbound counts for the dashboard",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "campaigns"
+                ],
+                "summary": "Campaign stats",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Campaign ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.CampaignStatsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies": {
+            "get": {
+                "description": "Paginated, filterable lead list for a campaign",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "List companies",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Campaign ID",
+                        "name": "campaign_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search name, domain, industry, location",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma separated: high,medium,low",
+                        "name": "priority",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma separated: not_started,in_progress,complete",
+                        "name": "research_status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma separated: new,shortlisted,contacted,in_discussion,rejected",
+                        "name": "evaluation_status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "fit",
+                        "description": "fit|fit-asc|a-z|z-a|priority|recents",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 25,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.CompaniesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Manually adds a target company to a campaign",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Add company",
+                "parameters": [
+                    {
+                        "description": "Company",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.CreateCompanyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.Company"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/export": {
+            "get": {
+                "description": "Prioritised lead list as CSV with fit, reasons, risks and source URLs. Takes the same filters as the list.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Export companies",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Campaign ID",
+                        "name": "campaign_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search name, domain, industry, location",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma separated: high,medium,low",
+                        "name": "priority",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma separated: not_started,in_progress,complete",
+                        "name": "research_status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma separated: new,shortlisted,contacted,in_discussion,rejected",
+                        "name": "evaluation_status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "priority",
+                        "description": "fit|fit-asc|a-z|z-a|priority|recents",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{id}": {
+            "get": {
+                "description": "Company profile with research findings",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Get company",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.Company"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Removes a company and its findings, chat and drafts from the campaign",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Remove company",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Partially updates profile fields, priority, research or evaluation status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "companies"
+                ],
+                "summary": "Update company",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.UpdateCompanyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.Company"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{id}/findings": {
+            "post": {
+                "description": "Records a manual research finding, risk, missing item or next action",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "research"
+                ],
+                "summary": "Add finding",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Finding",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.CreateFindingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.ResearchFinding"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{id}/findings/{findingId}": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "research"
+                ],
+                "summary": "Delete finding",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Finding ID",
+                        "name": "findingId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{id}/messages": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "research"
+                ],
+                "summary": "Research chat history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core_internal_model.ResearchMessage"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Saves the question. An assistant reply is only added when a research provider is configured.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "research"
+                ],
+                "summary": "Ask about a company",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Question",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.CreateMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core_internal_model.ResearchMessage"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{id}/research": {
+            "post": {
+                "description": "Runs the enrichment agent and saves findings. Returns 503 when OPENAI_API_KEY is not set.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "research"
+                ],
+                "summary": "Run research",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core_internal_model.ResearchFinding"
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/drafts": {
+            "get": {
+                "description": "Drafts for a company or an inbound opportunity",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "drafts"
+                ],
+                "summary": "List drafts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "company_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Opportunity ID",
+                        "name": "opportunity_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core_internal_model.MessageDraft"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates an outreach or reply draft. Outreach drafts with empty subject and body are written by AI from the company, its findings and the campaign ICP; otherwise a plain template fills them. Drafts are never sent.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "drafts"
+                ],
+                "summary": "Create draft",
+                "parameters": [
+                    {
+                        "description": "Draft",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.CreateDraftRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.MessageDraft"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/drafts/{id}": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "drafts"
+                ],
+                "summary": "Delete draft",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Draft ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Edits a draft or marks it reviewed. Editing a reviewed draft returns it to draft.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "drafts"
+                ],
+                "summary": "Update draft",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Draft ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.UpdateDraftRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.MessageDraft"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/inbound": {
+            "get": {
+                "description": "Inbound deals for a campaign, new and high priority first, with status counts",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbound"
+                ],
+                "summary": "List inbound opportunities",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Campaign ID",
+                        "name": "campaign_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search subject, sender or company",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "new|reviewing|qualified|declined",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "high|medium|low",
+                        "name": "priority",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core_internal_model.InboundOpportunity"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Manually records an inbound deal email until Gmail sync is available",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbound"
+                ],
+                "summary": "Log inbound opportunity",
+                "parameters": [
+                    {
+                        "description": "Opportunity",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.CreateOpportunityRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.InboundOpportunity"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/inbound/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbound"
+                ],
+                "summary": "Get inbound opportunity",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Opportunity ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.InboundOpportunity"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Changes evaluation status, priority or the ICP fit note",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbound"
+                ],
+                "summary": "Update inbound opportunity",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Opportunity ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.UpdateOpportunityRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.InboundOpportunity"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/inbound/{id}/evaluate": {
+            "post": {
+                "description": "Runs the research agent on the email against the campaign ICP and saves fit score, summary and priority",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbound"
+                ],
+                "summary": "Evaluate inbound opportunity",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Opportunity ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/core_internal_model.InboundOpportunity"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations": {
+            "get": {
+                "description": "Reports whether Gmail and the research provider are available",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "Integration status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.IntegrationsData"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/gmail/sync": {
+            "post": {
+                "description": "Pulls the last 7 days of inbound emails, adds sender companies as leads and enriches them. Returns 503 until GMAIL_USER and GMAIL_APP_PASSWORD are set.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "integrations"
+                ],
+                "summary": "Sync Gmail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Campaign ID",
+                        "name": "campaign_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/api_controller.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api_controller.CampaignStatsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/core_internal_repository.CampaignStats"
+                }
+            }
+        },
+        "api_controller.CompaniesResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/core_internal_model.Company"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api_controller.CreateCampaignRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "gmail_label": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "icp": {
+                    "$ref": "#/definitions/api_controller.ICPRequest"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "active"
+                    ]
+                },
+                "workflow": {
+                    "type": "string",
+                    "enum": [
+                        "outbound",
+                        "inbound",
+                        "both"
+                    ]
+                }
+            }
+        },
+        "api_controller.CreateCompanyRequest": {
+            "type": "object",
+            "required": [
+                "campaign_id",
+                "name"
+            ],
+            "properties": {
+                "campaign_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 4000
+                },
+                "domain": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "employees": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "founded_year": {
+                    "type": "integer",
+                    "maximum": 2100,
+                    "minimum": 1800
+                },
+                "industry": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "location": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "owner_name": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "revenue_estimate": {
+                    "type": "string",
+                    "maxLength": 60
+                }
+            }
+        },
+        "api_controller.CreateDraftRequest": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string",
+                    "maxLength": 20000
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "opportunity_id": {
+                    "type": "string"
+                },
+                "recipient": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "subject": {
+                    "type": "string",
+                    "maxLength": 300
+                }
+            }
+        },
+        "api_controller.CreateFindingRequest": {
+            "type": "object",
+            "required": [
+                "kind",
+                "title"
+            ],
+            "properties": {
+                "confidence": {
+                    "type": "string",
+                    "enum": [
+                        "high",
+                        "medium",
+                        "low"
+                    ]
+                },
+                "content": {
+                    "type": "string",
+                    "maxLength": 4000
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "fit",
+                        "finding",
+                        "risk",
+                        "missing",
+                        "next_action"
+                    ]
+                },
+                "source_url": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 200
+                }
+            }
+        },
+        "api_controller.CreateMessageRequest": {
+            "type": "object",
+            "required": [
+                "body"
+            ],
+            "properties": {
+                "body": {
+                    "type": "string",
+                    "maxLength": 4000
+                }
+            }
+        },
+        "api_controller.CreateOpportunityRequest": {
+            "type": "object",
+            "required": [
+                "campaign_id",
+                "sender_email",
+                "subject"
+            ],
+            "properties": {
+                "body": {
+                    "type": "string",
+                    "maxLength": 20000
+                },
+                "campaign_id": {
+                    "type": "string"
+                },
+                "company_domain": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "company_name": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "sender_email": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "sender_name": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "subject": {
+                    "type": "string",
+                    "maxLength": 300
+                }
+            }
+        },
+        "api_controller.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_controller.ICPRequest": {
+            "type": "object",
+            "properties": {
+                "business_models": {
+                    "type": "array",
+                    "maxItems": 30,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "characteristics": {
+                    "type": "array",
+                    "maxItems": 30,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ebitda_min": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "employees_max": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "employees_min": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "exclusions": {
+                    "type": "array",
+                    "maxItems": 30,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "geographies": {
+                    "type": "array",
+                    "maxItems": 30,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "industries": {
+                    "type": "array",
+                    "maxItems": 30,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ownership": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "revenue_max": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "revenue_min": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "thesis": {
+                    "type": "string",
+                    "maxLength": 2000
+                }
+            }
+        },
+        "api_controller.ImportData": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/core_pkg_csv.RowError"
+                    }
+                },
+                "failed": {
+                    "type": "integer"
+                },
+                "inserted": {
+                    "type": "integer"
+                },
+                "rows_processed": {
+                    "type": "integer"
+                },
+                "skipped": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api_controller.IntegrationsData": {
+            "type": "object",
+            "properties": {
+                "gmail": {},
+                "research": {
+                    "$ref": "#/definitions/api_controller.ResearchStatus"
+                }
+            }
+        },
+        "api_controller.ResearchStatus": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_controller.UpdateCampaignRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "gmail_label": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "minLength": 1
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "active",
+                        "paused",
+                        "archived"
+                    ]
+                },
+                "workflow": {
+                    "type": "string",
+                    "enum": [
+                        "outbound",
+                        "inbound",
+                        "both"
+                    ]
+                }
+            }
+        },
+        "api_controller.UpdateCompanyRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 4000
+                },
+                "domain": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "employees": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "evaluation_status": {
+                    "type": "string",
+                    "enum": [
+                        "new",
+                        "shortlisted",
+                        "contacted",
+                        "in_discussion",
+                        "rejected"
+                    ]
+                },
+                "industry": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "location": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1
+                },
+                "owner_name": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "high",
+                        "medium",
+                        "low"
+                    ]
+                },
+                "research_status": {
+                    "type": "string",
+                    "enum": [
+                        "not_started",
+                        "in_progress",
+                        "complete"
+                    ]
+                },
+                "revenue_estimate": {
+                    "type": "string",
+                    "maxLength": 60
+                }
+            }
+        },
+        "api_controller.UpdateDraftRequest": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string",
+                    "maxLength": 20000
+                },
+                "recipient": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "reviewed"
+                    ]
+                },
+                "subject": {
+                    "type": "string",
+                    "maxLength": 300
+                }
+            }
+        },
+        "api_controller.UpdateOpportunityRequest": {
+            "type": "object",
+            "properties": {
+                "fit_summary": {
+                    "type": "string",
+                    "maxLength": 4000
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "high",
+                        "medium",
+                        "low"
+                    ]
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "new",
+                        "reviewing",
+                        "qualified",
+                        "declined"
+                    ]
+                }
+            }
+        },
+        "core_internal_model.Campaign": {
+            "type": "object",
+            "properties": {
+                "company_count": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "gmail_label": {
+                    "type": "string"
+                },
+                "icp": {
+                    "$ref": "#/definitions/core_internal_model.ICPCriteria"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "opportunity_count": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "workflow": {
+                    "type": "string"
+                }
+            }
+        },
+        "core_internal_model.Company": {
+            "type": "object",
+            "properties": {
+                "campaign_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "employees": {
+                    "type": "integer"
+                },
+                "evaluation_status": {
+                    "type": "string"
+                },
+                "findings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/core_internal_model.ResearchFinding"
+                    }
+                },
+                "fit_score": {
+                    "type": "integer"
+                },
+                "fit_summary": {
+                    "type": "string"
+                },
+                "founded_year": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "industry": {
+                    "type": "string"
+                },
+                "is_sample": {
+                    "type": "boolean"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner_name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "research_status": {
+                    "type": "string"
+                },
+                "revenue_estimate": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "core_internal_model.ICPCriteria": {
+            "type": "object",
+            "properties": {
+                "business_models": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "campaign_id": {
+                    "type": "string"
+                },
+                "characteristics": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "ebitda_min": {
+                    "type": "integer"
+                },
+                "employees_max": {
+                    "type": "integer"
+                },
+                "employees_min": {
+                    "type": "integer"
+                },
+                "exclusions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "geographies": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "industries": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ownership": {
+                    "type": "string"
+                },
+                "revenue_max": {
+                    "type": "integer"
+                },
+                "revenue_min": {
+                    "type": "integer"
+                },
+                "thesis": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "core_internal_model.InboundOpportunity": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "campaign_id": {
+                    "type": "string"
+                },
+                "company_domain": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "company_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "external_ref": {
+                    "type": "string"
+                },
+                "fit_score": {
+                    "type": "integer"
+                },
+                "fit_summary": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_sample": {
+                    "type": "boolean"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "received_at": {
+                    "type": "string"
+                },
+                "sender_email": {
+                    "type": "string"
+                },
+                "sender_name": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "core_internal_model.MessageDraft": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "opportunity_id": {
+                    "type": "string"
+                },
+                "recipient": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "core_internal_model.ResearchFinding": {
+            "type": "object",
+            "properties": {
+                "company_id": {
+                    "type": "string"
+                },
+                "confidence": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "evidence_status": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "source_url": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "core_internal_model.ResearchMessage": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "sender_role": {
+                    "type": "string"
+                }
+            }
+        },
+        "core_internal_repository.CampaignStats": {
+            "type": "object",
+            "properties": {
+                "companies": {
+                    "type": "integer"
+                },
+                "contacted": {
+                    "type": "integer"
+                },
+                "high_priority": {
+                    "type": "integer"
+                },
+                "inbound_new": {
+                    "type": "integer"
+                },
+                "researched": {
+                    "type": "integer"
+                },
+                "shortlisted": {
+                    "type": "integer"
+                }
+            }
+        },
+        "core_pkg_csv.RowError": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "row": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

@@ -38,7 +38,8 @@ Checks: `go build ./... && go vet ./...`
 
 ```
 cmd/server/            entrypoint; configures the OpenAI and Gmail clients
-api/router/            routes and CORS
+api/router/            routes, CORS and the /swagger route
+docs/                  generated Swagger spec (script/swagger.bash)
 api/controller/        handlers, request types, validation messages
 internal/config/       env config
 internal/database/     ensure, connect, migrate
@@ -54,6 +55,8 @@ script/                bootstrap, demo, migrate, seed, swagger
 ```
 
 ## API
+
+Interactive docs at [localhost:8000/swagger/index.html](http://localhost:8000/swagger/index.html), generated from the controller annotations into `docs/`. Run `./script/swagger.bash` after changing a handler.
 
 Base path `/api/v1`. Responses are `{"data": ...}` (lists add `total`, `page` and `count`) or `{"error": "..."}`. Validation errors name the field, for example `sender_email must be a valid email address; subject is required`.
 

@@ -17,6 +17,6 @@ export PGPASSWORD=${DB_PASSWORD:-}
 echo "Seeding database '${DB_NAME}' as user '${DB_USER}'..."
 
 psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
-    -v ON_ERROR_STOP=1 -q -f script/seed.sql
+    -v ON_ERROR_STOP=1 -q -f script/demo.sql
 
 echo "Bootstrap complete."

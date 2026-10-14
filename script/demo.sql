@@ -8,7 +8,7 @@ INSERT INTO campaigns (
     created_at,
     updated_at
 ) VALUES (
-    'asdghapifgcbiasucaucsb',
+    '8be4df61-93ca-11d2-aa0d-00e098032b8c',
     'Bootstrapped B2B SaaS',
     'Founder-owned, capital-efficient software companies with self-serve subscription revenue in North America and Europe.',
     'active',
@@ -34,7 +34,7 @@ INSERT INTO icp_criteria (
     employees_max,
     ownership
 ) VALUES (
-    'asdghapifgcbiasucaucsb',
+    '8be4df61-93ca-11d2-aa0d-00e098032b8c',
     'Acquire a profitable, founder-run B2B SaaS business that grew without venture capital, keep the product and team, and add sales and partnerships the founders never built.',
     '{"B2B SaaS","Productivity software","Marketing software","Analytics software","Developer tools"}',
     '{"United States","Canada","United Kingdom","European Union"}',

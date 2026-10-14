@@ -13,6 +13,10 @@ import (
 	"github.com/ory/graceful"
 )
 
+//	@title			Motif API
+//	@version		1.0
+//	@description	Acquisition sourcing: campaigns and ICP, leads, AI research, inbound deals and drafts.
+//	@BasePath		/api/v1
 func main() {
 	logger.Start()
 

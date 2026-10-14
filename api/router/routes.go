@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	controller "core/api/controller"
+	_ "core/docs"
 	config "core/internal/config"
 	service "core/internal/service"
 	gmail "core/pkg/gmail"
@@ -11,6 +12,8 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 )
 
@@ -28,6 +31,8 @@ func Config(db *gorm.DB, cfg *config.Config) http.Handler {
 		AllowOrigins:     []string{cfg.Server.AppOrigin},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 	}))
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	v1 := router.Group("/api/v1")
 	{
