@@ -17,6 +17,10 @@ var Client *ClientStruct
 func Configure(
 	config *cfg.OpenAIConfig,
 ) {
+	if config.SecretKey == "" {
+		return
+	}
+
 	Client = &ClientStruct{
 		Client: sdk.NewClient(
 			option.WithAPIKey(

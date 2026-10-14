@@ -26,6 +26,7 @@ type CompanyFilter struct {
 	Sort             string
 	Page             int
 	Limit            int
+	WithFindings     bool
 }
 
 var companySorts = map[string]string{
@@ -68,6 +69,12 @@ func (r *CompanyRepository) List(filter CompanyFilter) ([]model.Company, int64, 
 	order, ok := companySorts[filter.Sort]
 	if !ok {
 		order = companySorts["fit"]
+	}
+
+	if filter.WithFindings {
+		query = query.Preload("Findings", func(db *gorm.DB) *gorm.DB {
+			return db.Order("created_at ASC")
+		})
 	}
 
 	var companies []model.Company

@@ -55,6 +55,7 @@ func Config(db *gorm.DB, cfg *config.Config) http.Handler {
 		{
 			companies.GET("", controllers.GetCompanies)
 			companies.POST("", controllers.CreateCompany)
+			companies.GET("/export", controllers.ExportCompanies)
 			companies.GET("/:id", controllers.GetCompany)
 			companies.PATCH("/:id", controllers.UpdateCompany)
 			companies.DELETE("/:id", controllers.DeleteCompany)
@@ -71,6 +72,7 @@ func Config(db *gorm.DB, cfg *config.Config) http.Handler {
 			inbound.POST("", controllers.CreateOpportunity)
 			inbound.GET("/:id", controllers.GetOpportunity)
 			inbound.PATCH("/:id", controllers.UpdateOpportunity)
+			inbound.POST("/:id/evaluate", controllers.EvaluateOpportunity)
 		}
 
 		drafts := v1.Group("/drafts")

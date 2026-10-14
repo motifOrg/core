@@ -1,8 +1,11 @@
 package controller
 
 import (
+	encoding "encoding/csv"
+	"fmt"
 	"math"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -55,6 +58,115 @@ type CompaniesResponse struct {
 	Total int             `json:"total"`
 	Page  int             `json:"page"`
 	Count int64           `json:"count"`
+}
+
+// ExportCompanies godoc
+//
+//	@Summary		Export companies
+//	@Description	Prioritised lead list as CSV with fit, reasons, risks and source URLs. Takes the same filters as the list.
+//	@Tags			companies
+//	@Produce		text/csv
+//	@Param			campaign_id			query		string	true	"Campaign ID"
+//	@Param			q					query		string	false	"Search name, domain, industry, location"
+//	@Param			priority			query		string	false	"Comma separated: high,medium,low"
+//	@Param			research_status		query		string	false	"Comma separated: not_started,in_progress,complete"
+//	@Param			evaluation_status	query		string	false	"Comma separated: new,shortlisted,contacted,in_discussion,rejected"
+//	@Param			sort				query		string	false	"fit|fit-asc|a-z|z-a|priority|recents"	default(priority)
+//	@Success		200					{string}	string
+//	@Failure		404					{object}	ErrorResponse
+//	@Router			/companies/export [get]
+func (c *Controller) ExportCompanies(context *gin.Context) {
+	campaignID, _ := uuid.Parse(context.Query("campaign_id"))
+
+	campaign, err := c.campaigns.Get(campaignID)
+	if err != nil {
+		context.JSON(
+			http.StatusNotFound,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	companies, _, err := c.companies.List(repository.CompanyFilter{
+		CampaignID:       campaignID,
+		Query:            strings.TrimSpace(context.Query("q")),
+		Priority:         context.Query("priority"),
+		ResearchStatus:   context.Query("research_status"),
+		EvaluationStatus: context.Query("evaluation_status"),
+		Sort:             context.DefaultQuery("sort", "priority"),
+		Page:             1,
+		Limit:            -1,
+		WithFindings:     true,
+	})
+	if err != nil {
+		logger.Error(
+			"Failed to export companies: %v",
+			err,
+		)
+
+		context.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	slug := strings.Trim(regexp.MustCompile(`[^a-z0-9]+`).ReplaceAllString(strings.ToLower(campaign.Name), "-"), "-")
+
+	context.Header("Content-Type", "text/csv; charset=utf-8")
+	context.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="motif-%s-leads.csv"`, slug))
+
+	writer := encoding.NewWriter(context.Writer)
+
+	_ = writer.Write([]string{
+		"rank", "company", "domain", "industry", "location",
+		"priority", "fit_score", "fit_summary", "fit_reasons", "risks",
+		"revenue_estimate", "employees", "founded", "owner",
+		"research_status", "evaluation_status", "source_urls",
+	})
+
+	for i, company := range companies {
+		reasons := []string{}
+		risks := []string{}
+		sources := []string{}
+		seen := map[string]bool{}
+
+		for _, finding := range company.Findings {
+			switch finding.Kind {
+			case model.FindingFit:
+				reasons = append(reasons, finding.Title)
+			case model.FindingRisk:
+				risks = append(risks, finding.Title)
+			}
+
+			if finding.SourceURL != "" && !seen[finding.SourceURL] {
+				seen[finding.SourceURL] = true
+				sources = append(sources, finding.SourceURL)
+			}
+		}
+
+		score, employees, founded := "", "", ""
+		if company.FitScore != nil {
+			score = strconv.Itoa(*company.FitScore)
+		}
+		if company.Employees != nil {
+			employees = strconv.Itoa(*company.Employees)
+		}
+		if company.FoundedYear != nil {
+			founded = strconv.Itoa(*company.FoundedYear)
+		}
+
+		_ = writer.Write([]string{
+			strconv.Itoa(i + 1), company.Name, company.Domain, company.Industry, company.Location,
+			company.Priority, score, company.FitSummary, strings.Join(reasons, "; "), strings.Join(risks, "; "),
+			company.RevenueEstimate, employees, founded, company.OwnerName,
+			company.ResearchStatus, company.EvaluationStatus, strings.Join(sources, " "),
+		})
+	}
+
+	writer.Flush()
 }
 
 // GetCompanies godoc

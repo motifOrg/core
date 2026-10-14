@@ -46,6 +46,47 @@ Return ONLY valid JSON in this format:
 }
 `
 
+const evaluatePrompt = `
+You are a research analyst for a private equity firm.
+Score the inbound deal email below against the investment criteria.
+
+Email:
+From: %s <%s>
+Subject: %s
+
+%s
+
+Company the email is about:
+%s
+
+Investment criteria:
+%s
+
+Tools:
+- revenue_research returns revenue, headcount, and sources
+- news_research returns recent news, risks, and sources
+
+Rules:
+- The email is the main source: use the industry, location, revenue, EBITDA, headcount, ownership and deal type it states
+- Call revenue_research only when the email gives no revenue or headcount and the company has a domain
+- Call news_research only when the company has a domain
+- Do not call any tool when the company domain is empty
+- A criterion the email contradicts lowers the score; a criterion the email does not mention is unknown, not a miss
+- fit_score is an integer from 0 to 100
+- priority is "high" when fit_score is 70 or more
+- priority is "medium" when fit_score is 40 to 69
+- priority is "low" when fit_score is under 40
+- fit_summary is 2 to 3 sentences that name the criteria the deal meets, misses, and what is still unknown
+- Do not invent facts
+
+Return ONLY valid JSON in this format:
+{
+  "fit_score": 0,
+  "fit_summary": "string",
+  "priority": "high | medium | low"
+}
+`
+
 const askPrompt = `
 You are a research analyst for a private equity firm.
 Answer the question about the lead below.
@@ -178,6 +219,60 @@ func (c *ClientStruct) Enrich(
 
 	result.News = agent.News
 	result.Revenue = agent.Revenue
+
+	return &result, nil
+}
+
+func (c *ClientStruct) Evaluate(
+	opportunity model.InboundOpportunity,
+	company model.Company,
+	icp *model.ICPCriteria,
+) (*EnrichResponse, error) {
+	companyJSON, err := json.MarshalIndent(
+		company,
+		"",
+		"  ",
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	icpJSON, err := json.MarshalIndent(
+		icp,
+		"",
+		"  ",
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	input := fmt.Sprintf(
+		evaluatePrompt,
+		opportunity.SenderName,
+		opportunity.SenderEmail,
+		opportunity.Subject,
+		opportunity.Body,
+		companyJSON,
+		icpJSON,
+	)
+
+	agent, err := c.agent(company, icp, input, format("evaluate", enrichSchema))
+
+	if err != nil {
+		return nil, err
+	}
+
+	var result EnrichResponse
+
+	if err := json.Unmarshal([]byte(agent.Output), &result); err != nil {
+		return nil, fmt.Errorf(
+			"failed to parse evaluate response: %w\nresponse=%s",
+			err,
+			agent.Output,
+		)
+	}
 
 	return &result, nil
 }

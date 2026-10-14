@@ -14,9 +14,10 @@ import (
 var ErrResearchNotConfigured = errors.New("OPENAI_API_KEY is not set")
 
 type Research struct {
-	client    *openai.ClientStruct
-	companies *repository.CompanyRepository
-	research  *repository.ResearchRepository
+	client        *openai.ClientStruct
+	companies     *repository.CompanyRepository
+	research      *repository.ResearchRepository
+	opportunities *repository.OpportunityRepository
 }
 
 func NewResearch(
@@ -24,9 +25,10 @@ func NewResearch(
 	client *openai.ClientStruct,
 ) *Research {
 	return &Research{
-		client:    client,
-		companies: repository.NewCompanies(db),
-		research:  repository.NewResearch(db),
+		client:        client,
+		companies:     repository.NewCompanies(db),
+		research:      repository.NewResearch(db),
+		opportunities: repository.NewOpportunities(db),
 	}
 }
 
@@ -146,6 +148,61 @@ func (r *Research) Run(
 	failed = false
 
 	return findings, nil
+}
+
+func (r *Research) EvaluateAll(
+	opportunities []model.InboundOpportunity,
+	icp *model.ICPCriteria,
+) {
+	for _, opportunity := range opportunities {
+		if _, err := r.Evaluate(opportunity, icp);
+			err != nil {
+			logger.Error(
+				"Failed to evaluate %s: %v",
+				opportunity.Subject,
+				err,
+			)
+		}
+	}
+}
+
+func (r *Research) Evaluate(
+	opportunity model.InboundOpportunity,
+	icp *model.ICPCriteria,
+) (*model.InboundOpportunity, error) {
+	if !r.Enabled() {
+		return nil, ErrResearchNotConfigured
+	}
+
+	company := model.Company{
+		Name:   opportunity.CompanyName,
+		Domain: opportunity.CompanyDomain,
+	}
+
+	if opportunity.CompanyID != nil {
+		linked, err := r.companies.Get(*opportunity.CompanyID)
+		if err != nil {
+			return nil, err
+		}
+
+		company = *linked
+	}
+
+	result, err := r.client.Evaluate(opportunity, company, icp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err := r.opportunities.Update(opportunity.ID, map[string]any{
+		"fit_score":   result.FitScore,
+		"fit_summary": result.FitSummary,
+		"priority":    result.Priority,
+	}); err != nil {
+		return nil, err
+	}
+
+	return r.opportunities.Get(opportunity.ID)
 }
 
 func (r *Research) Email(

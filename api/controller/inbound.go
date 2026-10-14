@@ -7,7 +7,9 @@ import (
 
 	model "core/internal/model"
 	repository "core/internal/repository"
+	service "core/internal/service"
 	csv "core/pkg/csv"
+	gmail "core/pkg/gmail"
 	logger "core/pkg/log"
 
 	"github.com/gin-gonic/gin"
@@ -164,6 +166,11 @@ func (c *Controller) CreateOpportunity(context *gin.Context) {
 		Priority:      model.PriorityMedium,
 		Status:        model.OpportunityNew,
 	}
+
+	if gmail.FreeMail[opportunity.CompanyDomain] {
+		opportunity.CompanyDomain = ""
+	}
+
 	if err := c.opportunities.Create(&opportunity);
 		err != nil {
 		logger.Error(
@@ -177,6 +184,11 @@ func (c *Controller) CreateOpportunity(context *gin.Context) {
 		)
 
 		return
+	}
+
+	if c.researcher.Enabled() {
+		icp, _ := c.campaigns.GetICP(opportunity.CampaignID)
+		go c.researcher.EvaluateAll([]model.InboundOpportunity{opportunity}, icp)
 	}
 
 	context.JSON(
@@ -343,6 +355,8 @@ func (c *Controller) SyncGmail(context *gin.Context) {
 	}
 
 	leads := []model.Company{}
+	deals := []model.InboundOpportunity{}
+
 	for _, message := range messages {
 		if message.ExternalRef != "" {
 			exists, err := c.opportunities.Exists(
@@ -371,24 +385,32 @@ func (c *Controller) SyncGmail(context *gin.Context) {
 		_, domain, _ := strings.Cut(message.SenderEmail, "@")
 		domain = csv.NormalizeDomain(domain)
 
-		inserted, _, err := c.companies.InsertIgnoreDuplicates([]model.Company{{
-			CampaignID: campaignID,
-			Name:       domain,
-			Domain:     domain,
-			Source:     model.SourceGmail,
-		}})
-		if err != nil {
-			logger.Error(
-				"Failed to add lead: %v",
-				err,
-			)
+		if gmail.FreeMail[domain] {
+			domain = ""
+		}
 
-			context.JSON(
-				http.StatusInternalServerError,
-				gin.H{"error": err.Error()},
-			)
+		inserted := []model.Company{}
 
-			return
+		if domain != "" {
+			inserted, _, err = c.companies.InsertIgnoreDuplicates([]model.Company{{
+				CampaignID: campaignID,
+				Name:       domain,
+				Domain:     domain,
+				Source:     model.SourceGmail,
+			}})
+			if err != nil {
+				logger.Error(
+					"Failed to add lead: %v",
+					err,
+				)
+
+				context.JSON(
+					http.StatusInternalServerError,
+					gin.H{"error": err.Error()},
+				)
+
+				return
+			}
 		}
 
 		opportunity := model.InboundOpportunity{
@@ -443,19 +465,79 @@ func (c *Controller) SyncGmail(context *gin.Context) {
 
 			return
 		}
+
+		deals = append(deals, opportunity)
 	}
 
 	if c.researcher.Enabled() {
-		icp, _ := c.campaigns.GetICP(campaignID)
-		go c.researcher.Enrich(leads, icp)
+		go func() {
+			c.researcher.EvaluateAll(deals, campaign.ICP)
+			c.researcher.Enrich(leads, campaign.ICP)
+		}()
 	}
 
 	context.JSON(
 		http.StatusOK,
 		gin.H{"data": gin.H{
 			"messages":    len(messages),
+			"deals":       len(deals),
 			"leads":       len(leads),
 			"gmail_label": campaign.GmailLabel,
 		}},
+	)
+}
+
+// EvaluateOpportunity godoc
+//
+//	@Summary		Evaluate inbound opportunity
+//	@Description	Runs the research agent on the email against the campaign ICP and saves fit score, summary and priority
+//	@Tags			inbound
+//	@Produce		json
+//	@Param			id	path		string	true	"Opportunity ID"
+//	@Success		200	{object}	model.InboundOpportunity
+//	@Failure		404	{object}	ErrorResponse
+//	@Failure		503	{object}	ErrorResponse
+//	@Router			/inbound/{id}/evaluate [post]
+func (c *Controller) EvaluateOpportunity(context *gin.Context) {
+	id, _ := uuid.Parse(context.Param("id"))
+
+	if !c.researcher.Enabled() {
+		context.JSON(
+			http.StatusServiceUnavailable,
+			gin.H{"error": service.ErrResearchNotConfigured.Error()},
+		)
+		return
+	}
+
+	opportunity, err := c.opportunities.Get(id)
+	if err != nil {
+		context.JSON(
+			http.StatusNotFound,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	icp, _ := c.campaigns.GetICP(opportunity.CampaignID)
+
+	evaluated, err := c.researcher.Evaluate(*opportunity, icp)
+	if err != nil {
+		logger.Error(
+			"Failed to evaluate opportunity: %v",
+			err,
+		)
+
+		context.JSON(
+			http.StatusBadGateway,
+			gin.H{"error": "Couldn't evaluate the deal with AI. Try again."},
+		)
+
+		return
+	}
+
+	context.JSON(
+		http.StatusOK,
+		gin.H{"data": evaluated},
 	)
 }

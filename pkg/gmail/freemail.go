@@ -1,0 +1,25 @@
+package gmail
+
+var FreeMail = map[string]bool{
+	"gmail.com":      true,
+	"googlemail.com": true,
+	"yahoo.com":      true,
+	"ymail.com":      true,
+	"outlook.com":    true,
+	"hotmail.com":    true,
+	"live.com":       true,
+	"msn.com":        true,
+	"icloud.com":     true,
+	"me.com":         true,
+	"mac.com":        true,
+	"aol.com":        true,
+	"proton.me":      true,
+	"protonmail.com": true,
+	"gmx.com":        true,
+	"gmx.net":        true,
+	"mail.com":       true,
+	"zoho.com":       true,
+	"yandex.com":     true,
+	"fastmail.com":   true,
+	"hey.com":        true,
+}
