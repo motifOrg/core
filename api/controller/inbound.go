@@ -295,7 +295,7 @@ func (c *Controller) GetIntegrations(context *gin.Context) {
 // SyncGmail godoc
 //
 //	@Summary		Sync Gmail
-//	@Description	Pulls the last 7 days of inbound emails, adds sender companies as leads and enriches them. Returns 503 until Gmail OAuth is connected.
+//	@Description	Pulls the last 7 days of inbound emails, adds sender companies as leads and enriches them. Returns 503 until GMAIL_USER and GMAIL_APP_PASSWORD are set.
 //	@Tags			integrations
 //	@Produce		json
 //	@Param			campaign_id	query		string	true	"Campaign ID"
@@ -324,7 +324,6 @@ func (c *Controller) SyncGmail(context *gin.Context) {
 	}
 
 	messages, err := c.gmail.Sync(
-		context.Request.Context(),
 		time.Now().AddDate(0, 0, -7),
 		strings.TrimSpace(campaign.GmailLabel),
 	)

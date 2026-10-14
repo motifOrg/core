@@ -1,0 +1,14 @@
+.git
+.github
+.vscode
+
+bin
+tmp
+uploads
+
+.air.toml
+
+.env
+*.json
+
+Dockerfile

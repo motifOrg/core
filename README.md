@@ -43,7 +43,7 @@ internal/model/        GORM models and enums
 internal/repository/   queries
 internal/service/      research and Gmail
 pkg/csv/               company CSV parser
-pkg/gmail/             Gmail API client (service account)
+pkg/gmail/             Gmail IMAP client (app password)
 pkg/log/               logger
 pkg/openai/            OpenAI client, enrichment agent and research tools
 script/                bootstrap, migrate, seed, swagger
@@ -78,11 +78,11 @@ Base path `/api/v1`. Responses are `{"data": ...}` (lists add `total`, `page`, `
 Both live in `internal/service` and are nil today, so the API reports them as not configured instead of faking results.
 
 - `ResearchProvider`: `Research(company, icp)` returns findings, `Ask(company, history, question)` returns a reply. This is where web search, LLM orchestration or MCP tools would go.
-- Gmail: uses a Google Workspace service account with domain-wide delegation. In Google Cloud, create a service account and download its JSON key. In Workspace admin (Security → API controls → Domain-wide delegation), add the service account client ID with scope `https://www.googleapis.com/auth/gmail.readonly`. Set `gmail_label` per campaign in the app; when empty, sync uses `INBOX`.
+- Gmail: reads mail over IMAP with an app password, which doesn't expire unless revoked. Turn on 2-step verification for the Google account, create an app password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords), and set both vars below. Each campaign's `gmail_label` is opened as an IMAP folder (labels keep their Gmail name, nested ones as `Parent/Child`); when empty, sync uses `INBOX`. Mail is opened read-only, so sync doesn't mark anything as read.
 
 ```env
-GMAIL_CREDENTIALS=/path/to/service-account.json
-GMAIL_USER=deals@yourfirm.com
+GMAIL_USER=you@gmail.com
+GMAIL_APP_PASSWORD=abcdefghijklmnop
 ```
 
 There is no send path anywhere in the API.

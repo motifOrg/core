@@ -16,6 +16,12 @@ const emailPrompt = `
 You are a deal sourcing associate at a private equity firm.
 Write a first outreach email to the owner of the company below.
 
+Who we are and what we want:
+Campaign: %s
+%s
+Thesis: %s
+Ownership we look for: %s
+
 Company:
 %s
 
@@ -26,6 +32,7 @@ Rules:
 - Address the owner by first name when owner_name is set, otherwise use "Hi there"
 - Open with one specific detail about the company from the company data or findings
 - Say in one sentence why the company fits the investment criteria
+- Say in one sentence what we intend to do with the business, based on the thesis
 - Ask for a short call in the next two weeks
 - Body is 80 to 140 words in plain text with no markdown and no links
 - Sign off as "Best," with no name after it
@@ -57,8 +64,13 @@ type EmailResponse struct {
 
 func (c *ClientStruct) Email(
 	company model.Company,
-	icp *model.ICPCriteria,
+	campaign model.Campaign,
 ) (*EmailResponse, error) {
+	icp := campaign.ICP
+	if icp == nil {
+		icp = &model.ICPCriteria{}
+	}
+
 	companyJSON, err := json.MarshalIndent(
 		company,
 		"",
@@ -81,6 +93,10 @@ func (c *ClientStruct) Email(
 
 	input := fmt.Sprintf(
 		emailPrompt,
+		campaign.Name,
+		campaign.Description,
+		icp.Thesis,
+		icp.Ownership,
 		companyJSON,
 		icpJSON,
 	)

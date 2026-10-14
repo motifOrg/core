@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"errors"
 	"time"
 
@@ -39,12 +38,12 @@ func (g *Gmail) Status() GmailStatus {
 	if !g.Enabled() {
 		missing := []string{}
 
-		if g.cfg.Credentials == "" {
-			missing = append(missing, "GMAIL_CREDENTIALS")
-		}
-
 		if g.cfg.User == "" {
 			missing = append(missing, "GMAIL_USER")
+		}
+
+		if g.cfg.Password == "" {
+			missing = append(missing, "GMAIL_APP_PASSWORD")
 		}
 
 		return GmailStatus{
@@ -58,12 +57,11 @@ func (g *Gmail) Status() GmailStatus {
 		Status:     "ready",
 		Configured: true,
 		Connected:  true,
-		Message:    "Gmail is connected via service account.",
+		Message:    "Gmail is connected via app password.",
 	}
 }
 
 func (g *Gmail) Sync(
-	ctx context.Context,
 	since time.Time,
 	label string,
 ) ([]gmail.Message, error) {
@@ -71,5 +69,5 @@ func (g *Gmail) Sync(
 		return nil, ErrGmailNotConnected
 	}
 
-	return g.client.ListInbound(ctx, since, label)
+	return g.client.ListInbound(since, label)
 }

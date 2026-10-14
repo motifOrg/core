@@ -16,8 +16,8 @@ func Load() (*Config, error) {
 			AppOrigin: GetEnv("APP_ORIGIN", "http://localhost:3000"),
 		},
 		Gmail: GmailConfig{
-			Credentials: GetEnv("GMAIL_CREDENTIALS", ""),
-			User:        GetEnv("GMAIL_USER", ""),
+			User:     GetEnv("GMAIL_USER", ""),
+			Password: strings.ReplaceAll(GetEnv("GMAIL_APP_PASSWORD", ""), " ", ""),
 		},
 		Database: DatabaseConfig{
 			Name:     GetEnv("DB_NAME", "motif"),

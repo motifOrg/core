@@ -148,6 +148,17 @@ func (r *Research) Run(
 	return findings, nil
 }
 
+func (r *Research) Email(
+	company model.Company,
+	campaign model.Campaign,
+) (*openai.EmailResponse, error) {
+	if !r.Enabled() {
+		return nil, ErrResearchNotConfigured
+	}
+
+	return r.client.Email(company, campaign)
+}
+
 func (r *Research) Ask(
 	company model.Company,
 	icp *model.ICPCriteria,

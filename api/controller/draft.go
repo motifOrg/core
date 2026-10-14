@@ -65,7 +65,7 @@ func (c *Controller) GetDrafts(context *gin.Context) {
 // CreateDraft godoc
 //
 //	@Summary		Create draft
-//	@Description	Creates an outreach or reply draft. Empty subject/body are filled from a plain template. Drafts are never sent.
+//	@Description	Creates an outreach or reply draft. Outreach drafts with empty subject and body are written by AI from the company, its findings and the campaign ICP; otherwise a plain template fills them. Drafts are never sent.
 //	@Tags			drafts
 //	@Accept			json
 //	@Produce		json
@@ -116,6 +116,43 @@ func (c *Controller) CreateDraft(context *gin.Context) {
 
 			return
 		}
+
+		if draft.Subject == "" && draft.Body == "" && c.researcher.Enabled() {
+			campaign, err := c.campaigns.Get(company.CampaignID)
+			if err != nil {
+				logger.Error(
+					"Failed to load campaign: %v",
+					err,
+				)
+
+				context.JSON(
+					http.StatusInternalServerError,
+					gin.H{"error": err.Error()},
+				)
+
+				return
+			}
+
+			email, err := c.researcher.Email(*company, *campaign)
+			if err != nil {
+				logger.Error(
+					"Failed to draft email for %s: %v",
+					company.Name,
+					err,
+				)
+
+				context.JSON(
+					http.StatusBadGateway,
+					gin.H{"error": "Couldn't draft the email with AI. Try again."},
+				)
+
+				return
+			}
+
+			draft.Subject = email.Subject
+			draft.Body = email.Body
+		}
+
 		if draft.Subject == "" {
 			draft.Subject = fmt.Sprintf("Introduction - %s", company.Name)
 		}

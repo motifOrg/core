@@ -6,8 +6,8 @@ type ServerConfig struct {
 }
 
 type GmailConfig struct {
-	Credentials string
-	User        string
+	User     string
+	Password string
 }
 
 type DatabaseConfig struct {
